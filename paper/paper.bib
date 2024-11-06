@@ -1,12 +1,185 @@
 % IMPORTANT: for all online references, be sure to specify the full URL *and*
 % the access date!
 
-@manual{intel2019man,
-  author = {{Intel Corporation}},
-  title = {{Intel} 64 and {IA-32} Architectures Software Developer's Manual},
-  year = {2019},
-  month = oct,
-  volume = {1, 2, 3, 4},
-  note = {\url{https://intel.com/sdm},
-   accessed 2020-02-17}
+@article{10.1145/358438.349320,
+author = {Larsen, Samuel and Amarasinghe, Saman},
+title = {Exploiting superword level parallelism with multimedia instruction sets},
+year = {2000},
+issue_date = {May 2000},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {35},
+number = {5},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/358438.349320},
+doi = {10.1145/358438.349320},
+abstract = {Increasing focus on multimedia applications has prompted the addition
+of multimedia extensions to most existing general purpose microprocessors.  This added functionality comes primarily with the addition of short SIMD instructions.  Unfortunately, access to these instructions is limited to in-line assembly and library calls. Generally, it has been assumed that vector compilers provide the most promising means of exploiting multimedia instructions. Although vectorization technology is well understood, it is inherently complex and fragile. In addition, it is incapable of locating SIMD-style parallelism within a basic block.In this paper we introduce the concept of Superword Level Parallelism (SLP) ,a novel way of viewing parallelism in multimedia and scientific applications. We believe SLPP is  fundamentally different from the loop level parallelism exploited by traditional vector processing, and therefore demands a new method of extracting it.  We have developed a simple and robust compiler for detecting SLPP that targets basic blocks rather than loop nests.  As with techniques designed to extract ILP, ours is able to exploit parallelism both across loop iterations and within basic blocks. The result is an algorithm that provides excellent performance in several application domains. In our experiments, dynamic instruction counts were reduced by 46\%. Speedups ranged from 1.24 to 6.70.},
+journal = {SIGPLAN Not.},
+month = may,
+pages = {145–156},
+numpages = {12}
+}
+
+@inproceedings{10.1145/349299.349320,
+author = {Larsen, Samuel and Amarasinghe, Saman},
+title = {Exploiting superword level parallelism with multimedia instruction sets},
+year = {2000},
+isbn = {1581131992},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/349299.349320},
+doi = {10.1145/349299.349320},
+booktitle = {Proceedings of the ACM SIGPLAN 2000 Conference on Programming Language Design and Implementation},
+pages = {145–156},
+numpages = {12},
+location = {Vancouver, British Columbia, Canada},
+series = {PLDI '00}
+}
+
+@inproceedings{10.1145/3519939.3523701,
+author = {Chen, Yishen and Mendis, Charith and Amarasinghe, Saman},
+title = {All you need is superword-level parallelism: systematic control-flow vectorization with SLP},
+year = {2022},
+isbn = {9781450392655},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3519939.3523701},
+doi = {10.1145/3519939.3523701},
+booktitle = {Proceedings of the 43rd ACM SIGPLAN International Conference on Programming Language Design and Implementation},
+pages = {301–315},
+numpages = {15},
+keywords = {auto-vectorization, optimization},
+location = {San Diego, CA, USA},
+series = {PLDI 2022}
+}
+
+@online{vecoptgcc,
+  author = {Jakub Jelínek},
+  title = {Vectorization optimization in GCC},
+  year = {2023},
+  month = {12},
+  url = {https://developers.redhat.com/articles/2023/12/08/vectorization-optimization-gcc},
+  note = {Accessed: 2024-11-04}
+}
+
+@online{autovecoptgcc,
+  author = {GCC Team},
+  title = {Auto-vectorization in GCC},
+  year = {2023},
+  month = {02},
+  url = {https://gcc.gnu.org/projects/tree-ssa/vectorization.html},
+  note = {Accessed: 2024-11-04}
+}
+
+@thesis{gccllvmveccomp,
+  author = {Klara Modin},
+  title = {A comparison of auto-vectorization performance between GCC and LLVM for the RISC-V vector extension},
+  school = {KTH School of Electrical Engineering and Computer Science},
+  type = {Bachelor's Thesis},
+  year = {2024},
+  month = {10},
+  url = {https://urn.kb.se/resolve?urn=urn:nbn:se:kth:diva-354873}
+}
+
+@online{llvmvec,
+  author = {LLVM Team},
+  title = {Auto-Vectorization in LLVM},
+  year = {2023},
+  month = {07},
+  url = {https://llvm.org/docs/Vectorizers.html},
+  note = {Accessed: 2024-11-04}
+}
+
+@online{llvmvplan,
+  author = {LLVM Team},
+  title = {Vectorization Plan},
+  year = {2024},
+  month = {05},
+  url = {https://llvm.org/docs/VectorizationPlan.html},
+  note = {Accessed: 2024-11-04}
+}
+
+@online{llvmvplanupdate,
+  author = {Ayal Zaks, Florian Hahn},
+  title = {VPlan: Status Update and Future Roadmap},
+  year = {2023},
+  url = {https://www.youtube.com/watch?v=SzGP4PgMuLE},
+  note = {Accessed: 2024-11-02}
+}
+
+@misc{taneja2024llmvectorizerllmbasedverifiedloop,
+      title={LLM-Vectorizer: LLM-based Verified Loop Vectorizer}, 
+      author={Jubi Taneja and Avery Laird and Cong Yan and Madan Musuvathi and Shuvendu K. Lahiri},
+      year={2024},
+      eprint={2406.04693},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2406.04693}, 
+}
+
+@article{9802745,
+  author={Adit, Neil and Sampson, Adrian},
+  journal={IEEE Micro}, 
+  title={Performance Left on the Table: An Evaluation of Compiler Autovectorization for RISC-V}, 
+  year={2022},
+  volume={42},
+  number={5},
+  pages={41-48},
+  keywords={Codes;Benchmark testing;Programming;Registers;Program processors;Reduced instruction set computing;Instruction sets},
+  doi={10.1109/MM.2022.3184867}}
+
+@article{POHL2020102106,
+title = {Vectorization cost modeling for NEON, AVX and SVE},
+journal = {Performance Evaluation},
+volume = {140-141},
+pages = {102106},
+year = {2020},
+issn = {0166-5316},
+doi = {https://doi.org/10.1016/j.peva.2020.102106},
+url = {https://www.sciencedirect.com/science/article/pii/S0166531620300262},
+author = {Angela Pohl and Biagio Cosenza and Ben Juurlink},
+}
+
+@article{10.1155/2021/3264624,
+author = {Feng, Jing Ge and He, Ye Ping and Tao, Qiu Ming and Wahid, Fazli},
+title = {Evaluation of Compilers’ Capability of Automatic Vectorization Based on Source Code Analysis},
+year = {2021},
+issue_date = {2021},
+publisher = {Hindawi Limited},
+address = {London, GBR},
+volume = {2021},
+issn = {1058-9244},
+url = {https://doi.org/10.1155/2021/3264624},
+doi = {10.1155/2021/3264624},
+abstract = {Automatic vectorization is an important technique for compilers to improve the parallelism of programs. With the widespread usage of SIMD (Single Instruction Multiple Data) extensions in modern processors, automatic vectorization has become a hot topic in the research of compiler techniques. Accurately evaluating the effectiveness of automatic vectorization in typical compilers is quite valuable for compiler optimization and design. This paper evaluates the effectiveness of automatic vectorization, analyzes the limitation of automatic vectorization and the main causes, and improves the automatic vectorization technology. This paper firstly classifies the programs by two main factors: program characteristics and transformation methods. Then, it evaluates the effectiveness of automatic vectorization in three well-known compilers (GCC, LLVM, and ICC, including their multiple versions in recent 5 years) through TSVC (Test Suite for Vectorizing Compilers) benchmark. Furthermore, this paper analyzes the limitation of automatic vectorization based on source code analysis, and introduces the differences between academic research and engineering practice in automatic vectorization and the main causes, Finally, it gives some suggestions as to how to improve automatic vectorization capability.},
+journal = {Sci. Program.},
+month = nov,
+numpages = {15}
+}
+
+@article{2023arXiv230201131K,
+       author = {{Karuppanan}, Sayinath and {Mirbagher Ajorpaz}, Samira},
+        title = "{An Attack on The Speculative Vectorization: Leakage from Higher Dimensional Speculation}",
+      journal = {arXiv e-prints},
+     keywords = {Computer Science - Cryptography and Security},
+         year = 2023,
+        month = feb,
+          eid = {arXiv:2302.01131},
+        pages = {arXiv:2302.01131},
+          doi = {10.48550/arXiv.2302.01131},
+archivePrefix = {arXiv},
+       eprint = {2302.01131},
+ primaryClass = {cs.CR},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2023arXiv230201131K},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      numpages = {15}
+}
+
+@online{llvmveccontrolflow,
+  author = {Ashutosh Nema, Anupama Rasale},
+  title = {Improving Vectorization for Loops with Control Flow},
+  year = {2023},
+  url = {https://www.youtube.com/watch?v=mKG0NmGtpbE},
+  note = {Accessed: 2024-11-04}
 }

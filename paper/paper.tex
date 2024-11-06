@@ -12,33 +12,87 @@
 
 
 \begin{document}
-\title{History of Beach Computers}
-\author{Best Student}
-\author{Better Student}
+\title{Utilizing Parallel Workers: \\LLVM's Vectorization Plan}
+\author{Jonas Fritsch}
 \affiliation{%
   \institution{Technical University of Munich}
 }
-\email{{best,better}@example.com}
+\email{jonas.fritsch@tum.de}
 
 \begin{abstract}
 Your Abstract.
 \end{abstract}
 
-% If you like to...
-%\keywords{Beach, Computers, History}
-
 \maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \section{Introduction}
 \label{sec:introduction}
 
-Beaches are a very natural part of countries and are especially useful for vacation. However, even when on travel, programmers obviously do not want to live without computers. This led to the development of \emph{beach computers}. This type of computers was introduced in 1970 by Some Inventor~\cite{intel2019man} % <-- some totally random reference
-to satisfy needs of programmers, but also to boost increase their vacation productivity. \textit{To be continued.}
+\begin{enumerate}
+  \item 
+\end{enumerate}
 
-\section{Summary \& Outlook}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Background}
+\label{sec:background}
+\begin{enumerate}
+  \item (SIMD explanation necessary?)
+  \item Vectorization explanation (with Code-Examples?)
+  \begin{enumerate}
+    \item Inner-Loop
+    \item Outer-Loop
+    \item Superword Level Parallelism~\cite{10.1145/349299.349320}~(maybe already \cite{10.1145/3519939.3523701})
+  \end{enumerate}
+  \item Vectorization Drawbacks (reuse code-examples from above)
+  \begin{itemize}
+    \item possible performance loss
+    \item larger code size
+    \item (potential security vulnerablities~\cite{2023arXiv230201131K})
+  \end{itemize}
+  \item LLVM short introduction
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{LLVM's Vectorization Plan}
+\label{sec:vplan}
+\begin{enumerate}
+  \item Cost-Model (related work?~\cite{POHL2020102106})
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Related Work}
+\label{sec:relatedwork}
+\begin{enumerate}
+  \item Auto-Vectorization in GCC~\cite{autovecoptgcc, vecoptgcc}
+  \item Comparison with GCC~\cite{gccllvmveccomp,10.1155/2021/3264624}
+  \item (LLM-based Vectorization~\cite{taneja2024llmvectorizerllmbasedverifiedloop}, also if included maybe better fitting in "Future Work")
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Summary and Future Work}
 \label{sec:summary}
+\begin{enumerate}
+  \item VPlan Summary and Future Roadmap~\cite{llvmvplan}
+  \item Comparison/Outlook auto-vectorization vs. manual vectorization~\cite{10.1155/2021/3264624,9802745}
+\end{enumerate}
 
-Oh, and here goes the summary. Future work is expected in water computers so that programmers can also be productive while swimming.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{paper} % read paper.bib file
