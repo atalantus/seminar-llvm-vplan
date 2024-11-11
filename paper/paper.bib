@@ -1,26 +1,6 @@
 % IMPORTANT: for all online references, be sure to specify the full URL *and*
 % the access date!
 
-@article{10.1145/358438.349320,
-author = {Larsen, Samuel and Amarasinghe, Saman},
-title = {Exploiting superword level parallelism with multimedia instruction sets},
-year = {2000},
-issue_date = {May 2000},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {35},
-number = {5},
-issn = {0362-1340},
-url = {https://doi.org/10.1145/358438.349320},
-doi = {10.1145/358438.349320},
-abstract = {Increasing focus on multimedia applications has prompted the addition
-of multimedia extensions to most existing general purpose microprocessors.  This added functionality comes primarily with the addition of short SIMD instructions.  Unfortunately, access to these instructions is limited to in-line assembly and library calls. Generally, it has been assumed that vector compilers provide the most promising means of exploiting multimedia instructions. Although vectorization technology is well understood, it is inherently complex and fragile. In addition, it is incapable of locating SIMD-style parallelism within a basic block.In this paper we introduce the concept of Superword Level Parallelism (SLP) ,a novel way of viewing parallelism in multimedia and scientific applications. We believe SLPP is  fundamentally different from the loop level parallelism exploited by traditional vector processing, and therefore demands a new method of extracting it.  We have developed a simple and robust compiler for detecting SLPP that targets basic blocks rather than loop nests.  As with techniques designed to extract ILP, ours is able to exploit parallelism both across loop iterations and within basic blocks. The result is an algorithm that provides excellent performance in several application domains. In our experiments, dynamic instruction counts were reduced by 46\%. Speedups ranged from 1.24 to 6.70.},
-journal = {SIGPLAN Not.},
-month = may,
-pages = {145–156},
-numpages = {12}
-}
-
 @inproceedings{10.1145/349299.349320,
 author = {Larsen, Samuel and Amarasinghe, Saman},
 title = {Exploiting superword level parallelism with multimedia instruction sets},
@@ -72,6 +52,14 @@ series = {PLDI 2022}
   note = {Accessed: 2024-11-04}
 }
 
+@online{llvmvplanrv,
+  author = {Simon Moll, Sebastian Hack},
+  title = {VPlan + Rv: A Proposal},
+  year = {2017},
+  url = {https://www.youtube.com/watch?v=svMEphbFukw},
+  note = {Accessed: 2024-11-11}
+}
+
 @thesis{gccllvmveccomp,
   author = {Klara Modin},
   title = {A comparison of auto-vectorization performance between GCC and LLVM for the RISC-V vector extension},
@@ -85,7 +73,7 @@ series = {PLDI 2022}
 @online{llvmvec,
   author = {LLVM Team},
   title = {Auto-Vectorization in LLVM},
-  year = {2023},
+  year = {2021},
   month = {07},
   url = {https://llvm.org/docs/Vectorizers.html},
   note = {Accessed: 2024-11-04}
@@ -106,6 +94,22 @@ series = {PLDI 2022}
   year = {2023},
   url = {https://www.youtube.com/watch?v=SzGP4PgMuLE},
   note = {Accessed: 2024-11-02}
+}
+
+@online{llvmvplanstate,
+  author = {Ayal Zaks, Gil Rapaport},
+  title = {Vectorizing Loops with VPlan – Current State and Next Steps},
+  year = {2017},
+  url = {https://www.youtube.com/watch?v=BjBSJFzYDVk},
+  note = {Accessed: 2024-11-04}
+}
+
+@online{llvmpolyhedral,
+  author = {Polly Team},
+  year = {2017},
+  title = {Polly - LLVM Framework for High-Level Loop and Data-Locality Optimizations},
+  url = {https://polly.llvm.org/index.html},
+  note = {Accessed: 2024-11-11}
 }
 
 @misc{taneja2024llmvectorizerllmbasedverifiedloop,
@@ -176,10 +180,238 @@ archivePrefix = {arXiv},
       numpages = {15}
 }
 
+@INPROCEEDINGS{4336219,
+  author={Shin, Jaewook},
+  booktitle={16th International Conference on Parallel Architecture and Compilation Techniques (PACT 2007)}, 
+  title={Introducing Control Flow into Vectorized Code}, 
+  year={2007},
+  volume={},
+  number={},
+  pages={280-291},
+  keywords={Parallel processing;Automatic generation control;Microprocessors;Automatic control;Kernel;Parallel architectures;Mathematics;Computer science;Laboratories;Clocks},
+  doi={10.1109/PACT.2007.4336219}
+}
+
 @online{llvmveccontrolflow,
   author = {Ashutosh Nema, Anupama Rasale},
   title = {Improving Vectorization for Loops with Control Flow},
   year = {2023},
   url = {https://www.youtube.com/watch?v=mKG0NmGtpbE},
   note = {Accessed: 2024-11-04}
+}
+
+@online{llvmextloopvec,
+  author = {Hideki Saito},
+  title = {Extending LoopVectorizer towards supporting OpenMP4.5 SIMD and outer loop auto-vectorization},
+  year = {2016},
+  url = {https://www.youtube.com/watch?v=XXAvdUwO7kQ},
+  note = {Accessed: 2024-11-06}
+}
+
+@online{llvmintrvplan,
+  author = {Gil Rapaport},
+  title = {Introducing VPlan to the Loop Vectorizer},
+  year = {2017},
+  url = {https://www.youtube.com/watch?v=IqzJRs6tb7Y},
+  note = {Accessed: 2024-11-06}
+}
+
+@online{intelouterloop,
+  author = {Intel},
+  title = {Outer Loop Vectorization},
+  year = {2019},
+  url = {https://www.intel.com/content/www/us/en/developer/articles/technical/outer-loop-vectorization.html},
+  note = {Accessed: 2024-11-06}
+}
+
+@online{intelvecessen,
+  author = {Intel},
+  title = {Vectorization Essentials},
+  year = {2019},
+  url = {https://www.intel.com/content/www/us/en/developer/articles/technical/vectorization-essential.html},
+  note = {Accessed: 2024-11-11}
+}
+
+@inproceedings{DBLP:conf/vldb/BensonER23,
+  author       = {Lawrence Benson and
+                  Richard Ebeling and
+                  Tilmann Rabl},
+  title        = {Evaluating {SIMD} Compiler-Intrinsics for Database Systems},
+  booktitle    = {Joint Proceedings of Workshops at the 49th International Conference
+                  on Very Large Data Bases {(VLDB} 2023), Vancouver, Canada, August
+                  28 - September 1, 2023},
+  series       = {{CEUR} Workshop Proceedings},
+  volume       = {3462},
+  publisher    = {CEUR-WS.org},
+  year         = {2023},
+  url          = {https://ceur-ws.org/Vol-3462/ADMS5.pdf},
+  timestamp    = {Thu, 15 Aug 2024 07:54:16 +0200},
+  biburl       = {https://dblp.org/rec/conf/vldb/BensonER23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{10.5555/3615924.3615932,
+author = {Paktinatkeleshteri, Rouzbeh and de Carvalho, Jo\~{a}o P. L and Amiri, Ehsan and Amaral, J. Nelson},
+title = {Efficient Auto-Vectorization for Control-flow Dependent Loops through Data Permutation},
+year = {2023},
+publisher = {IBM Corp.},
+address = {USA},
+abstract = {The presence of control-flow divergence in loops can either hin-der or impede auto-vectorization as a compiler transformation to exploit parallelism enabled by Single-Instruction Multiple-Data (SIMD) instructions. A solution is to linearize control flow through the use of predicated execution. However, computation resources are wasted when predicated instructions are executed but not com-mitted because of a false predicate. Alternative approaches op-timistically avoid predicated instructions when all conditions in a vectorized loop iteration evaluate to the same value. However, dynamic uniformity is less frequent in long vectors. Active-Lane-Consolidation (ALC) was proposed to form uniform vectors dynam-ically by merging active elements from different iterations. In its seminal presentation, ALC was only evaluated in a simulated en-vironment through hand-modified programs. This paper presents the first performance evaluation of ALC on real hardware which reveals that the original design of ALC indeed reduces the number of executed instructions, but it fails to provide speedup over auto-vectorized code. It then presents a change to the design of ALC that results in it outperforming auto-vectorized code and describes the first compiler-enabled transformation that applies ALC as a compiler optimization pass. The experimental results show that compiler-generated ALC code outperforms auto-vectorized code, produced by state-of-the-art compilers, by up to 79\%.},
+booktitle = {Proceedings of the 33rd Annual International Conference on Computer Science and Software Engineering},
+pages = {74–83},
+numpages = {10},
+keywords = {SIMD, Scalable-Vector Extensions, Compilers},
+location = {Las Vegas, NV, USA},
+series = {CASCON '23}
+}
+
+@article{10.1145/2366231.2337210,
+author = {Satish, Nadathur and Kim, Changkyu and Chhugani, Jatin and Saito, Hideki and Krishnaiyer, Rakesh and Smelyanskiy, Mikhail and Girkar, Milind and Dubey, Pradeep},
+title = {Can traditional programming bridge the Ninja performance gap for parallel computing applications?},
+year = {2012},
+issue_date = {June 2012},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {40},
+number = {3},
+issn = {0163-5964},
+url = {https://doi.org/10.1145/2366231.2337210},
+doi = {10.1145/2366231.2337210},
+abstract = {Current processor trends of integrating more cores with wider SIMD units, along with a deeper and complex memory hierarchy, have made it increasingly more challenging to extract performance from applications. It is believed by some that traditional approaches to programming do not apply to these modern processors and hence radical new languages must be discovered. In this paper, we question this thinking and offer evidence in support of traditional programming methods and the performance-vs-programming effort effectiveness of common multi-core processors and upcoming many-core architectures in delivering significant speedup, and close-to-optimal performance for commonly used parallel computing workloads.We first quantify the extent of the "Ninja gap", which is the performance gap between naively written C/C++ code that is parallelism unaware (often serial) and best-optimized code on modern multi-/many-core processors. Using a set of representative throughput computing benchmarks, we show that there is an average Ninja gap of 24X (up to 53X) for a recent 6-core Intel® Core™ i7 X980 Westmere CPU, and that this gap if left unaddressed will inevitably increase. We show how a set of well-known algorithmic changes coupled with advancements in modern compiler technology can bring down the Ninja gap to an average of just 1.3X. These changes typically require low programming effort, as compared to the very high effort in producing Ninja code. We also discuss hardware support for programmability that can reduce the impact of these changes and even further increase programmer productivity. We show equally encouraging results for the upcoming Intel® Many Integrated Core architecture (Intel® MIC) which has more cores and wider SIMD. We thus demonstrate that we can contain the otherwise uncontrolled growth of the Ninja gap and offer a more stable and predictable performance growth over future architectures, offering strong evidence that radical language changes are not required.},
+journal = {SIGARCH Comput. Archit. News},
+month = jun,
+pages = {440–451},
+numpages = {12}
+}
+
+@inproceedings{10.5555/2337159.2337210,
+author = {Satish, Nadathur and Kim, Changkyu and Chhugani, Jatin and Saito, Hideki and Krishnaiyer, Rakesh and Smelyanskiy, Mikhail and Girkar, Milind and Dubey, Pradeep},
+title = {Can traditional programming bridge the Ninja performance gap for parallel computing applications?},
+year = {2012},
+isbn = {9781450316422},
+publisher = {IEEE Computer Society},
+address = {USA},
+abstract = {Current processor trends of integrating more cores with wider SIMD units, along with a deeper and complex memory hierarchy, have made it increasingly more challenging to extract performance from applications. It is believed by some that traditional approaches to programming do not apply to these modern processors and hence radical new languages must be discovered. In this paper, we question this thinking and offer evidence in support of traditional programming methods and the performance-vs-programming effort effectiveness of common multi-core processors and upcoming many-core architectures in delivering significant speedup, and close-to-optimal performance for commonly used parallel computing workloads.We first quantify the extent of the "Ninja gap", which is the performance gap between naively written C/C++ code that is parallelism unaware (often serial) and best-optimized code on modern multi-/many-core processors. Using a set of representative throughput computing benchmarks, we show that there is an average Ninja gap of 24X (up to 53X) for a recent 6-core Intel® Core™ i7 X980 Westmere CPU, and that this gap if left unaddressed will inevitably increase. We show how a set of well-known algorithmic changes coupled with advancements in modern compiler technology can bring down the Ninja gap to an average of just 1.3X. These changes typically require low programming effort, as compared to the very high effort in producing Ninja code. We also discuss hardware support for programmability that can reduce the impact of these changes and even further increase programmer productivity. We show equally encouraging results for the upcoming Intel® Many Integrated Core architecture (Intel® MIC) which has more cores and wider SIMD. We thus demonstrate that we can contain the otherwise uncontrolled growth of the Ninja gap and offer a more stable and predictable performance growth over future architectures, offering strong evidence that radical language changes are not required.},
+booktitle = {Proceedings of the 39th Annual International Symposium on Computer Architecture},
+pages = {440–451},
+numpages = {12},
+location = {Portland, Oregon},
+series = {ISCA '12}
+}
+
+@inproceedings{10.5555/977395.977673,
+author = {Chris Lattner, Vikram Adve},
+title = {LLVM: A Compilation Framework for Lifelong Program Analysis \& Transformation},
+year = {2004},
+isbn = {0769521029},
+publisher = {IEEE Computer Society},
+address = {USA},
+booktitle = {Proceedings of the International Symposium on Code Generation and Optimization: Feedback-Directed and Runtime Optimization},
+pages = {75},
+location = {Palo Alto, California},
+series = {CGO '04}
+}
+
+@article{chinese180,
+author = {Feng Jingge, He Yeping, Tao Qiuming},
+title = {Automatic Vectorization: Recent Progress and Outlook},
+publisher = {通信学报},
+year = {2022},
+journal = {Journal of Communications},
+volume = {43},
+number = {3},
+eid = {180},
+numpages = {15},
+pages = {180 - 195},
+url = {https://www.infocomm-journal.com/txxb/CN/abstract/article_172304.shtml},
+doi = {10.11959/j.issn.1000-436x.2022051}
+}
+
+@article{10.1145/3296979.3192413,
+author = {Simon Moll, Sebastian Hack},
+title = {Partial control-flow linearization},
+year = {2018},
+issue_date = {April 2018},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {53},
+number = {4},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/3296979.3192413},
+doi = {10.1145/3296979.3192413},
+journal = {SIGPLAN Not.},
+month = jun,
+pages = {543–556},
+numpages = {14},
+keywords = {SPMD, SIMD, Compiler optimizations}
+}
+
+@inproceedings{10.1145/3192366.3192413,
+author = {Simon Moll, Sebastian Hack},
+title = {Partial control-flow linearization},
+year = {2018},
+isbn = {9781450356985},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3192366.3192413},
+doi = {10.1145/3192366.3192413},
+abstract = {If-conversion is a fundamental technique for vectorization. It accounts for the fact that in a SIMD program, several targets of a branch might be executed because of divergence. Especially for irregular data-parallel workloads, it is crucial to avoid if-converting non-divergent branches to increase SIMD utilization. In this paper, we present partial linearization, a simple and efficient if-conversion algorithm that overcomes several limitations of existing if-conversion techniques. In contrast to prior work, it has provable guarantees on which non-divergent branches are retained and will never duplicate code or insert additional branches. We show how our algorithm can be used in a classic loop vectorizer as well as to implement data-parallel languages such as ISPC or OpenCL. Furthermore, we implement prior vectorizer optimizations on top of partial linearization in a more general way. We evaluate the implementation of our algorithm in LLVM on a range of irregular data analytics kernels, a neutronics simulation benchmark and NAB, a molecular dynamics benchmark from SPEC2017 on AVX2, AVX512, and ARM Advanced SIMD machines and report speedups of up to 146 \% over ICC, GCC and Clang O3.},
+booktitle = {Proceedings of the 39th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {543–556},
+numpages = {14},
+keywords = {SPMD, SIMD, Compiler optimizations},
+location = {Philadelphia, PA, USA},
+series = {PLDI 2018}
+}
+
+@online{saarlandrv,
+  author = {Universität-Saarland Compiler Design Lab},
+  title = {RV: A Unified Region Vectorizer for LLVM},
+  year = {2024},
+  url = {https://github.com/cdl-saarland/rv},
+  note = {Accessed: 2024-11-11}
+}
+
+@online{llvmouterloop,
+  author = {Diego Caballero, Vectorizer Team Intel Corporation},
+  title = {Extending LoopVectorize to Support Outer Loop Vectorization Using VPlan},
+  year = {2018},
+  url = {https://www.youtube.com/watch?v=z6NeHLRNVok},
+  note = {Accessed: 2024-11-04}
+}
+
+@inproceedings{10.1145/3303117.3306172,
+author = {Simon Moll, Shrey Sharma, Matthias Kurtenacker, Sebastian Hack },
+title = {Multi-dimensional Vectorization in LLVM},
+year = {2019},
+isbn = {9781450362917},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3303117.3306172},
+doi = {10.1145/3303117.3306172},
+abstract = {Loop vectorization is a classic technique to exploit SIMD instructions in a productive way. In multi-dimensional vectorization, multiple loops of a loop nest are vectorized at once. This exposes opportunities for data reuse, register tiling and more efficient memory accesses.In this work, we present TensorRV, a multi-dimensional vectorization framework for LLVM IR. TensorRV is a generalization of the Region Vectorizer, a general purpose outer-loop and whole-function vectorizer, to the multi-dimensional setting.We evaluate TensorRV on a set of stencil codes and matrix transpose. We find that stencil codes benefit from the reduction of load instructions with a speedup of x 1.45 on NEC SX-Aurora TSUBASA. Multi-loop vectorized matrix transpose leverages efficient SIMD shuffle instructions on AVX512, for which we report a speedup of x 3.27.},
+booktitle = {Proceedings of the 5th Workshop on Programming Models for SIMD/Vector Processing},
+articleno = {3},
+numpages = {8},
+keywords = {Compiler, Optimization, SIMD, Tensor, Vectorization},
+location = {Washington, DC, USA},
+series = {WPMVP'19}
+}
+
+@inproceedings{10.1145/1454115.1454119,
+author = {Dorit Nuzman, Ayal Zaks},
+title = {Outer-loop vectorization: revisited for short SIMD architectures},
+year = {2008},
+isbn = {9781605582825},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1454115.1454119},
+doi = {10.1145/1454115.1454119},
+abstract = {Vectorization has been an important method of using data-level parallelism to accelerate scientific workloads on vector machines such as Cray for the past three decades. In the last decade it has also proven useful for accelerating multi-media and embedded applications on short SIMD architectures such as MMX, SSE and AltiVec. Most of the focus has been directed at innermost loops, effectively executing their iterations concurrently as much as possible. Outer loop vectorization refers to vectorizing a level of a loop nest other than the innermost, which can be beneficial if the outer loop exhibits greater data-level parallelism and locality than the innermost loop. Outer loop vectorization has traditionally been performed by interchanging an outer-loop with the innermost loop, followed by vectorizing it at the innermost position. A more direct unroll-and-jam approach can be used to vectorize an outer-loop without involving loop interchange, which can be especially suitable for short SIMD architectures.In this paper we revisit the method of outer loop vectorization, paying special attention to properties of modern short SIMD architectures. We show that even though current optimizing compilers for such targets do not apply outer-loop vectorization in general, it can provide significant performance improvements over innermost loop vectorization. Our implementation of direct outer-loop vectorization, available in GCC 4.3, achieves speedup factors of 3.13 and 2.77 on average across a set of benchmarks, compared to 1.53 and 1.39 achieved by innermost loop vectorization, when running on a Cell BE SPU and PowerPC970 processors respectively. Moreover, outer-loop vectorization provides new reuse opportunities that can be vital for such short SIMD architectures, including efficient handling of alignment. We present an optimization tapping such opportunities, capable of further boosting the performance obtained by outer-loop vectorization to achieve average speedup factors of 5.26 and 3.64.},
+booktitle = {Proceedings of the 17th International Conference on Parallel Architectures and Compilation Techniques},
+pages = {2–11},
+numpages = {10},
+keywords = {vectorization, subword parallelism, data reuse, SIMD},
+location = {Toronto, Ontario, Canada},
+series = {PACT '08}
 }
