@@ -38,6 +38,7 @@ Lorem ipsum.
   \item LLVM as popular, platform-agnostic compiler framework
   \item auto-vectorization complexity $\rightarrow$ wish for well designed, 
   interoperable system (VPlan) $\rightarrow$ ongoing 8 year long effort started by Intel
+  \item rough paper outline
 \end{enumerate}
 
 
@@ -84,8 +85,8 @@ Lorem ipsum.
     \item Building initial VPlan based on Phase 1 Constraints (Generate one or more up-to-date Code Examples for VPlan similar to~\cite{llvmintrvplan,llvmvplanstate,llvmouterloop})
     $\rightarrow$ Explain different components (e.g.: \texttt{VPBasicBlock}, \texttt{VPRegionBlock}, etc.) and
     correlation between generated VPlan structure, original scalar code. Show some general optimizations.
-    \item Modelling Cost (related work? already adopted?~\cite{POHL2020102106})
-    \item Optimizing/Transforming VPlans
+    \item Modelling Cost. Not yet part of VPlan. (related work? already adopted?~\cite{POHL2020102106})
+    \item Optimizing/Transforming VPlans~\cite{llvmvplanupdate}
   \end{enumerate}
   \item Phase 3: Execution - Materialize best VPlan
 \end{enumerate}
@@ -115,7 +116,6 @@ Lorem ipsum.
   \item VPlan Summary~\cite{llvmvplan,llvmvplanupdate}
   \item VPlan Future Roadmap~\cite{llvmvplan,llvmvplanupdate} (e.g.: combining outer-/inner-loop paths, full function vectorization, etc.)
   \item (Comparison/Outlook auto-vectorization and explicit vectorization~\cite{10.1155/2021/3264624, 9802745, DBLP:conf/vldb/BensonER23})
-  (\cite{chinese180}~only in chinese?)
 \end{enumerate}
 
 
