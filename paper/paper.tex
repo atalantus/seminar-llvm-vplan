@@ -20,7 +20,7 @@
 \email{jonas.fritsch@tum.de}
 
 \begin{abstract}
-Lorem ipsum.
+Lorem ipsum
 \end{abstract}
 
 \maketitle
@@ -30,16 +30,7 @@ Lorem ipsum.
 
 \section{Introduction}
 \label{sec:introduction}
-
-\begin{enumerate}
-  \item Modern CPUs (SIMD-Registers, SIMD ISAs)
-  \item SIMD performance gains
-  \item Auto-Vectorization to help programmers better utilize SIMD functionality out of the box
-  \item LLVM as popular, platform-agnostic compiler framework
-  \item auto-vectorization complexity $\rightarrow$ wish for well designed, 
-  interoperable system (VPlan) $\rightarrow$ ongoing 8 year long effort started by Intel
-  \item rough paper outline
-\end{enumerate}
+Lorem ipsum
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,29 +38,7 @@ Lorem ipsum.
 
 \section{Background}
 \label{sec:background}
-\begin{enumerate}
-  \item Vectorization explanation (with Code\hyp{}Examples)
-  \begin{itemize}
-    \item Loop-Level Vectorization (Inner / Outer-Loops~\cite{llvmextloopvec,intelouterloop,10.5555/2337159.2337210,llvmouterloop,10.1145/1454115.1454119})
-    \item Function Vectorization~\cite{llvmextloopvec}
-    \item Superword-Level Parallelism\\Vectorization~\cite{10.1145/349299.349320}~(maybe already \cite{10.1145/3519939.3523701})
-  \end{itemize}
-  \item Vectorization Drawbacks~\cite{llvmveccontrolflow,intelvecessen} (reuse code\hyp{}examples from above)
-  \begin{itemize}
-    \item not always legal / applicable, e.g.: backwards data-dependencies, pointer aliasing, 
-    platform backwards-compatability / support, control flow complexity (function calls, register pressure), FP inaccuracies (\texttt{-ffast-math})
-    \item possible performance loss, e.g.: costly conversions (horizontal aggregations, integer division) resulting in slower overall code
-    on average
-    \item larger code size, e.g.: need for scalar loop-tail / epilogue
-    \item (potential security vulnerablities~\cite{2023arXiv230201131K})
-  \end{itemize}
-  \item OpenMP (very short)
-  \item Auto-Vectorization in Compilers (short)
-  \item LLVM (very brief introduction)~\cite{10.5555/977395.977673}
-  \item LLVM 'recent' transition from Loop Vectorizer + SLP Vectorizer to 
-  Vectorization Plan (ongoing 8 year long refactoring and improvment 
-  effort started by Intel)
-\end{enumerate}
+Lorem ipsum
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,19 +46,7 @@ Lorem ipsum.
 
 \section{LLVM's Vectorization Plan}
 \label{sec:vplan}
-  Overview~\cite{llvmvec,llvmvplan,llvmextloopvec,llvmintrvplan,llvmvplanstate,llvmvplanrv,llvmouterloop,llvmvplanupdate}
-\begin{enumerate}
-  \item Phase 1: Legality
-  \item Phase 2: Planning (Vectorization Plans)
-  \begin{enumerate}
-    \item Building initial VPlan based on Phase 1 Constraints (Generate one or more up-to-date Code Examples for VPlan similar to~\cite{llvmintrvplan,llvmvplanstate,llvmouterloop})
-    $\rightarrow$ Explain different components (e.g.: \texttt{VPBasicBlock}, \texttt{VPRegionBlock}, etc.) and
-    correlation between generated VPlan structure, original scalar code. Show some general optimizations.
-    \item Modelling Cost. Not yet part of VPlan. (related work? already adopted?~\cite{POHL2020102106})
-    \item Optimizing/Transforming VPlans~\cite{llvmvplanupdate}
-  \end{enumerate}
-  \item Phase 3: Execution - Materialize best VPlan
-\end{enumerate}
+Lorem ipsum
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,14 +54,7 @@ Lorem ipsum.
 
 \section{Related Work}
 \label{sec:relatedwork}
-\begin{enumerate}
-  \item Other auto-vectorization algorithms / possible improvements~\cite{10.5555/3615924.3615932,4336219,llvmveccontrolflow,saarlandrv,10.1145/3303117.3306172}
-  \\Some of those should already be (partially) implemented in LLVM
-  \item Auto-Vectorization in GCC~\cite{autovecoptgcc, vecoptgcc}
-  \item Comparison with GCC~\cite{gccllvmveccomp,10.1155/2021/3264624}
-  \item (Polyhedral compilation techniques~\cite{llvmpolyhedral})
-  \item (LLM-based Vectorization~\cite{taneja2024llmvectorizerllmbasedverifiedloop})
-\end{enumerate}
+Lorem ipsum
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,11 +62,7 @@ Lorem ipsum.
 
 \section{Summary and Future Work}
 \label{sec:summary}
-\begin{enumerate}
-  \item VPlan Summary~\cite{llvmvplan,llvmvplanupdate}
-  \item VPlan Future Roadmap~\cite{llvmvplan,llvmvplanupdate} (e.g.: combining outer-/inner-loop paths, full function vectorization, etc.)
-  \item (Comparison/Outlook auto-vectorization and explicit vectorization~\cite{10.1155/2021/3264624, 9802745, DBLP:conf/vldb/BensonER23})
-\end{enumerate}
+Lorem ipsum
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
