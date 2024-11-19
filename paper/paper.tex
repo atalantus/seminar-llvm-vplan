@@ -30,39 +30,40 @@ Lorem ipsum
 
 \section{Introduction}
 \label{sec:introduction}
-Modern CPUs are often equipped with multiple different vector registers. These registers can nowadays 
-be as wide as 512 bit, allowing for the processing of multiple data streams at once (SIMD). By 
+Modern CPUs are often equipped with multiple different vector registers. These registers are nowadays 
+as wide as 512 bits, allowing for the processing of multiple data streams at once (SIMD). By 
 batching multiple values together in one register, different ISAs like Intel AVX or ARM SVE allow 
-the execution of the same instruction for all values in a vector register at once. Utilizing this 
-can often lead to significant performance improvements over the scalar equivalent.
+the execution of the same instruction for all values in a vector register simultaneously. 
+Utilizing this leads to significant performance improvements over the scalar equivalent most of 
+the time.
 
-However, as manual code vectorization can quickly become very time consuming especially when
+However, as manual code vectorization can quickly become very time-consuming, especially when
 supporting different CPU architectures, modern compilers aim to automatically transform scalar code
 to use vectorization when applicable.
 
-As one of the most widely used compilation frameworks LLVM~\cite{10.5555/977395.977673} had 
+As one of the most widely used compilation frameworks, LLVM~\cite{10.5555/977395.977673} has 
 implemented and refined its auto-vectorization over many years. It provides two different 
 Vectorizers, one for innermost loops (LoopVectorize) and one for super-word parallelism 
 (SLPVectorize)~\cite{llvmvec}.
 
-This system however had quite a few limitations, as the loop vectorizer could only handle
-innermost loops and neither outer loops, complex control flow, or non-inlined functions. 
-Additionally, while multiple different vectorizatons for the same scalar code 
-would be possible, the current vectorizers working directly on the LLVM IR had no capability 
-of modelling and comparing the costs of such different vectorization approaches.
+This system, however, had quite a few limitations, as the loop vectorizer could only handle
+innermost loops and neither outer loops, complex control flow, nor non-inlined functions. 
+Additionally, while multiple different vectorizations for the same scalar code 
+would be possible, the current vectorizers working directly on the LLVM IR could not model
+and compare the costs of such different vectorization approaches.
 
-With these limitations in mind Intel started an ongoing refactorization effort to migrate LLVM's
-auto-vectorization pipeline to use a more abstract Vectorization Plan 
+With these limitations in mind, Intel started an ongoing refactorization effort to migrate LLVM's
+auto-vectorization pipeline to utilize a more abstract Vectorization Plan 
 (VPlan)~\cite{llvmextloopvec,llvmvplan}. The final goal would be to unite LLVM's auto-vectorization
-in a single flexible system capable of optimizing SLPs, inner and nested loops with complex 
+in a single flexible system capable of optimizing SLPs, inner, and nested loops with complex 
 control flows. The auto-vectorization pass would create, compare, and transform multiple different 
-VPlans each modelling a different vectorization approach and finally materialize the best one into
+VPlans, each modeling a different vectorization approach, and finally materialize the best one into
 the LLVM IR.
 
-In its current state LLVM's VPlan system is being integrated into the existing Loop Vectorizer and
-already models most of the inner loop vectorization and transformations. Vectorization for outer 
+LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and is
+already modeling most inner loop vectorizations and transformations. Vectorization for outer 
 loops is also in development and can be enabled by setting the \texttt{-enable-vplan-native-path} 
-flag ~\cite{llvmouterloop}. In the future the plan will be to merge both of these loop vectorization
+flag~\cite{llvmouterloop}. In the future, the plan will be to merge both of these loop vectorization
 paths into one.
 
 
@@ -71,7 +72,33 @@ paths into one.
 
 \section{Background}
 \label{sec:background}
-Lorem ipsum
+Modern SIMD ISAs like Intel AVX, ARM NEON or even vector-length agnostic ISAs like ARM SVE provide
+a variety of different instructions to allow vectorization of even complex control flows. To lower
+the complexity for implementing auto-vectorization, the general optimizations are often divided
+into different categories:
+
+\subsection{Inner Loop Vectorization}
+Innermost loops are loops whose body's control flow does not contain any loops, bound or unbound.
+Vectorizing such loops is generall eas
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.35\textwidth]{images/inner-loop-vec.png}
+  \caption{asdf}
+  \label{fig:inner-loop-vec}
+\end{figure}
+
+\subsection{Super-Word Parallelism (SLP) Vectorization}
+asdf
+
+\subsection{Outer Loop Vectorizaton}
+asdf
+
+\subsection{Function Vectorization}
+asdf
+
+\subsection{Vectorization Constraints}
+asdf
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
