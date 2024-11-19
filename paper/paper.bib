@@ -76,7 +76,7 @@ series = {PLDI 2022}
   year = {2021},
   month = {07},
   url = {https://llvm.org/docs/Vectorizers.html},
-  note = {Accessed: 2024-11-04}
+  note = {Accessed: 2024-11-18}
 }
 
 @online{llvmvplan,
@@ -85,7 +85,7 @@ series = {PLDI 2022}
   year = {2024},
   month = {05},
   url = {https://llvm.org/docs/VectorizationPlan.html},
-  note = {Accessed: 2024-11-04}
+  note = {Accessed: 2024-11-18}
 }
 
 @online{llvmvplanupdate,
@@ -201,11 +201,11 @@ archivePrefix = {arXiv},
 }
 
 @online{llvmextloopvec,
-  author = {Hideki Saito},
+  author = {Saito, Hideki and Intel Vectorizer Team},
   title = {Extending LoopVectorizer towards supporting OpenMP4.5 SIMD and outer loop auto-vectorization},
   year = {2016},
-  url = {https://www.youtube.com/watch?v=XXAvdUwO7kQ},
-  note = {Accessed: 2024-11-06}
+  url = {https://llvm.org/devmtg/2016-11/Slides/Saito-NextLevelLLVMLoopVectorizer.pdf},
+  note = {Accessed: 2024-11-18}
 }
 
 @online{llvmintrvplan,
@@ -300,7 +300,7 @@ series = {ISCA '12}
 }
 
 @inproceedings{10.5555/977395.977673,
-author = {Chris Lattner, Vikram Adve},
+author = {Lattner, Chris and Adve, Vikram},
 title = {LLVM: A Compilation Framework for Lifelong Program Analysis \& Transformation},
 year = {2004},
 isbn = {0769521029},
@@ -372,12 +372,16 @@ series = {PLDI 2018}
   note = {Accessed: 2024-11-11}
 }
 
+@online{llvm-discourse-outer-loop,
+  author = {LLVM Team}
+}
+
 @online{llvmouterloop,
-  author = {Diego Caballero and Vectorizer Team Intel Corporation},
+  author = {Caballero, Diego and Intel Vectorizer Team},
   title = {Extending LoopVectorize to Support Outer Loop Vectorization Using VPlan},
   year = {2018},
-  url = {https://www.youtube.com/watch?v=z6NeHLRNVok},
-  note = {Accessed: 2024-11-04}
+  url = {https://llvm.org/devmtg/2018-04/slides/Caballero-Extending%20LoopVectorize%20to%20Support%20Outer%20Loop%20Vectorization%20Using%20VPlan.pdf},
+  note = {Accessed: 2024-11-18}
 }
 
 @inproceedings{10.1145/3303117.3306172,
@@ -389,7 +393,6 @@ publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
 url = {https://doi.org/10.1145/3303117.3306172},
 doi = {10.1145/3303117.3306172},
-abstract = {Loop vectorization is a classic technique to exploit SIMD instructions in a productive way. In multi-dimensional vectorization, multiple loops of a loop nest are vectorized at once. This exposes opportunities for data reuse, register tiling and more efficient memory accesses.In this work, we present TensorRV, a multi-dimensional vectorization framework for LLVM IR. TensorRV is a generalization of the Region Vectorizer, a general purpose outer-loop and whole-function vectorizer, to the multi-dimensional setting.We evaluate TensorRV on a set of stencil codes and matrix transpose. We find that stencil codes benefit from the reduction of load instructions with a speedup of x 1.45 on NEC SX-Aurora TSUBASA. Multi-loop vectorized matrix transpose leverages efficient SIMD shuffle instructions on AVX512, for which we report a speedup of x 3.27.},
 booktitle = {Proceedings of the 5th Workshop on Programming Models for SIMD/Vector Processing},
 articleno = {3},
 numpages = {8},
