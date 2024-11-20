@@ -26,6 +26,8 @@ Lorem ipsum
 \maketitle
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \section{Introduction}
@@ -65,9 +67,12 @@ LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and
 already modeling most inner loop vectorizations and transformations~\cite{llvmvplanupdate}. 
 Vectorization for outer loops is also in development and can be enabled by setting 
 the \texttt{-enable-vplan-native-path} flag~\cite{llvmouterloop}. In the future, the plan will 
-be to merge both of these loop vectorization paths into one.
+be to merge both of these loop vectorization paths into one. Merging the existing SLP Vectorizer
+with VPlan is also planned.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -181,13 +186,53 @@ to overlapping memory regions, in which case the scalar version of the loop is e
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \section{LLVM's Vectorization Plan}
 \label{sec:vplan}
-Lorem ipsum
+Originally LLVM implements two different vectorizers for auto-vectorization, LoopVectorize (LV)
+and SLPVectorize. These vectorizers are a part of LLVM's middle-end and run after module 
+simplification. As VPlan has not yet been integrated into SLP-Vectorization we will only focus on
+explaining the original LoopVectorize structure.
+
+LoopVectorize was designed to focus only on vectorization of innermost loops~\cite{llvmintrvplan}. 
+When starting with a initial scalable loop in IR it will first run a legality phase to check 
+whetever and how it is legal to vectorize the loop. This phase would produce artifacts like if 
+and what runtime aliasing checks would be required. If some vectorization would be legal the 
+cost model would run next, creating more artifacts based on the scalar IR and legality artifacts. 
+These cost model artifacts would associate different vectorization possibilities with a fixed cost.
+Lastly the transformation phase would vectorize the underlying IR based on all the produced 
+artifacts.
+
+However, this LoopVectorize architecture had several problems. For once extending the rigid system
+to include outer loop and nested loop vectorizations would have been very challenging. Producing
+and considering more and more artifacts when trying to transform the scalar into a vectorized
+loop all at once does not scale well.
+
+\subsection{State of Vectorization Plan (VPlan)}
 
 
+
+
+\subsection{Future of VPlan}
+%\subsection{Integration with LV}
+%\subsection{Outer Loop Vectorization}
+%\subsection{Merging with SLP Vectorize}
+%\subsection{Function Vectorization}
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{images/vplan-future.png}
+  \caption{The planned future architecture for VPlan. The VPlan optimization would
+  work as iteratievely applying VPlan-to-VPlan transformations.}
+  \label{fig:vplan-future}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -196,6 +241,8 @@ Lorem ipsum
 Lorem ipsum
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
