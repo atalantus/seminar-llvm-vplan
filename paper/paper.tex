@@ -81,7 +81,7 @@ Vectorization of these loops is more straightforward as the only option to vecto
 the loop's induction variable.
 
 There are various ways to transform the control flow of a loop to accommodate operating on widened
-vector registers. Figure \ref{fig:inner-loop-vec} shows an example of an if-conversion. Some more
+vector registers. Figure~\ref{fig:inner-loop-vec} shows an example of an if-conversion. Some more
 examples can also be found in LLVM's Auto-Vectorization Documentation~\cite{llvmvec}.
 
 \begin{figure}
@@ -105,7 +105,7 @@ inner loop, or a mix of both, representing a hybrid/multi-dimensional vectorizat
 Carrying out and comparing costs of such different vectorization approaches can be complex 
 and require a flexible system like, for example, VPlans. 
 
-Figure \ref{fig:outer-loop-vec} shows a nested loop code snippet where vectorization over the
+Figure~\ref{fig:outer-loop-vec} shows a nested loop code snippet where vectorization over the
 outer loop would be beneficial.
 
 \begin{figure}
@@ -131,34 +131,52 @@ around the function body and vectorizing it and vice versa. The same applies for
 and loop vectorization when unrolling a loop.
  
 \subsection{Vectorization Legality}
-Not all loops can be vectorized. There are various factors that can completely hinder any
+Not all loops can be vectorized. There are various factors that can ultimately hinder any
 vectorization attempts.
 
-% TODO
+Some of the most common vectorization barriers are data dependencies. As the vectorized version
+of a code executes for $N$ (Vectorization Factor) data streams simultaneously, it inherently changes
+the order of operations. To guarantee that the semantics of the code do not change, all
+operations on these $N$ data streams must, generally, be independent. The simplest case
+where this is not provided is when the $i$-th loop iteration depends on any of the $(i-N)$-th 
+previous iterations.
+
+While explicit data dependencies are easier to see, even a simple loop, as in 
+Figure~\ref{fig:inner-loop-vec}, could carry an implicit dependency in line 3, if
+the \texttt{x} and \texttt{y} point to overlapping memory regions (pointer aliasing).
+
+Not all data dependencies directly hinder any vectorization. One exception can 
+sometimes be made for reduction idioms, as seen in the inner loop in 
+Figure~\ref{fig:outer-loop-vec}, where \texttt{sum} would be a reduction variable.
+
+Additionally, the control flow should be primarily straight-line code. While most if-else 
+constructs can be flattened to always execute both branches along with masking, the same is not 
+valid for switch-case statements or too complex control flows.
 
 \subsection{Vectorization Costs}
-While it may just not be legal to vectorize a given control flow, sometimes the vectorized code 
-might also just perform worse than its scalar equivalent.
+While it may not be legal to vectorize a given control flow, the vectorized code sometimes 
+performs worse than its scalar equivalent.
 
 Some control flow transformations that seem beneficial at compile time might reveal a performance
-bottleneck at runtime. Considering the code snippet from Figure \ref{fig:inner-loop-vec}, it might
-be that at runtime almost all of \texttt{z[i]} evaluate to false. The branch predictor of a CPU
+bottleneck at runtime. Considering the code snippet from Figure~\ref{fig:inner-loop-vec}, it might
+be that almost all \texttt{z[i]} evaluate to false at runtime. The branch predictor of a CPU
 would then be able to guess the correct branch in the scalar code. The vectorized version would
-always load the \texttt{y[i]} into memory only for the addition to be masked away. There are
-different approaches to avoid such runtime penalties such as branch-on-superword-condition code 
+always load the \texttt{y[i]} into memory only for the addition to be masked away. Different 
+approaches to avoid such runtime penalties are branch-on-superword-condition code 
 (BOSCC)~\cite{10.5555/1299042.1299055,llvmboscc} or active-lane 
 consolidation (ALC)~\cite{10.1007/s11227-022-04359-w,10.5555/3615924.3615932}.
 
-Some vector instructions can be quite costly on most CPUs. An example would be gather/scatter
-or shuffeling and permutation instructions. Control flow with a lot of non-adjacent 
-memory load/stores or operations that combine different vector elements such as reductions
-can decrease vectorization performance.
+Some vector instructions can be costly on most CPUs. Examples are gather, scatter, shuffle,
+and permutation instructions. Control flow with many non-adjacent memory loads/stores or 
+operations that combine different vector elements, such as reductions, can decrease vectorization 
+performance.
 
-Additionally the vectorized code size will always be larger than the scalar equivalent. This is
-due to many factors: (1) The transformed control flow oftentimes simply includes more instructions.
+Additionally, the vectorized code size will always be larger than the scalar equivalent. This is
+due to many factors: (1) The transformed control flow often includes more instructions.
 (2) As the loop trip count might not be a perfect multiple of the vectorization factor, a scalar
 epilogue/remainder of the loop might be used to handle the tail iterations. (3) Various runtime
-checks might be inserted throughout the vectorized control flow to handle % TODO
+checks might be inserted throughout the vectorized control flow to handle, for example, pointers 
+to overlapping memory regions, in which case the scalar version of the loop is executed.
 
 
 
