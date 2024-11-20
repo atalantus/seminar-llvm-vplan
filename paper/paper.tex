@@ -37,8 +37,8 @@ the execution of the same instruction for all values in a vector register simult
 Utilizing this leads to significant performance improvements over the scalar equivalent most of 
 the time.
 
-However, as manual code vectorization can quickly become very time-consuming, especially when
-supporting different CPU architectures, modern compilers aim to automatically transform scalar code
+However, manual code vectorization can quickly become time-consuming, especially when
+supporting different CPU architectures. Modern compilers aim to automatically transform scalar code
 to use vectorization when applicable.
 
 As one of the most widely used compilation frameworks, LLVM~\cite{10.5555/977395.977673} has 
@@ -58,8 +58,8 @@ auto-vectorization pipeline to utilize a more abstract Vectorization Plan
 in a single flexible system capable of optimizing SLPs, inner, and nested loops with complex 
 control flows. The auto-vectorization pass would create and transform multiple different 
 VPlans, each modeling a different vectorization approach, abstracted away from the underlying LLVM IR.
-Those VPlans are compared against each other based on a cost model and finally the best one, which
-might also be not to vectorize at all, is materialized into the LLVM IR.
+Those VPlans are compared against each other based on a cost model, and finally, the best one, which
+might also not vectorize at all, is materialized into the LLVM IR.
 
 LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and is
 already modeling most inner loop vectorizations and transformations~\cite{llvmvplanupdate}. 
@@ -73,17 +73,14 @@ be to merge both of these loop vectorization paths into one.
 
 \section{Background}
 \label{sec:background}
-Modern SIMD ISAs like Intel AVX, ARM NEON or even vector-length agnostic ISAs like ARM SVE provide
-a variety of different instructions to allow vectorization of even complex control flows. To lower
-the complexity for implementing auto-vectorization, the general optimizations are often seperated
-into different categories:
+In general, vectorization techniques can be separated into different categories:
 
 \subsection{Inner Loop Vectorization}
 Innermost loops are loops whose body's control flow does not contain any more loops, bound or unbound.
-Vectorization of these loops are simpler in comparison as the only option to vectorize is over the
-loop's induction variable.
+Vectorization of these loops is more straightforward as the only option to vectorize is over 
+the loop's induction variable.
 
-There are various ways to transform the control flow of a loop to accomodate operating on widened
+There are various ways to transform the control flow of a loop to accommodate operating on widened
 vector registers. Figure \ref{fig:inner-loop-vec} shows an example of an if-conversion. Some more
 examples can also be found in LLVM's Auto-Vectorization Documentation~\cite{llvmvec}.
 
@@ -91,48 +88,47 @@ examples can also be found in LLVM's Auto-Vectorization Documentation~\cite{llvm
   \centering
   \includegraphics[width=0.35\textwidth]{images/inner-loop-vec.png}
   \caption{A code snippet of a simple loop that would be vectorized over the variable \texttt{i}. 
-  The conditional branch would be flattened into a masked-addition. The mask would be generated 
+  The conditional branch would be flattened into a masked addition. The mask would be generated 
   based on \texttt{z[i]}.}
   \label{fig:inner-loop-vec}
 \end{figure}
 
 \subsection{Super-Word Parallelism (SLP) Vectorization}
-SLP Vectorization vectorizes similar independent instructions. In the context of auto-vectorization a 
-compiler might have, for example, fully unrolled a smaller loop in a previous simplifcation pass. 
-The resulting similar scalar instructions might then be vectorized later on by an SLP vectorizer.
+SLP Vectorization vectorizes similar independent instructions. A compiler might have, for example, 
+fully unrolled a smaller loop in a previous code simplification pass. The resulting similar scalar 
+instructions might then be vectorized later by an SLP vectorizer.
 
 \subsection{Outer Loop Vectorizaton}
 Outer loop vectorization focuses on control flow with nested loops. Such loops often present
-more challenges for auto-vectorization, as one could possibly vectorize over the outer loop,
-the inner loop or a mix of both, representing a hybrid/multi-dimensional vectorization approach. Carrying out and
-comparing costs of such different vectorization approaches/transformations can be complex and
-require a flexible system like VPlans. 
+more challenges for auto-vectorization, as one could vectorize over the outer loop,
+inner loop, or a mix of both, representing a hybrid/multi-dimensional vectorization approach. 
+Carrying out and comparing costs of such different vectorization approaches can be complex 
+and require a flexible system like, for example, VPlans. 
 
-Figure \ref{fig:outer-loop-vec} shows a nested loop code-snippet where vectorization over the
+Figure \ref{fig:outer-loop-vec} shows a nested loop code snippet where vectorization over the
 outer loop would be beneficial.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.39\textwidth]{images/outer-loop-vec.png}
   \caption{A code snippet of a nested loop where it would be beneficial to vectorize over the 
-  outer loop. As the inner loop has a too low trip count (6) to vectorize and additionally
-  the memory access pattern of \texttt{y} would be adjacent compared to scattered when
+  outer loop. The inner loop has a trip count that is too low (6) to vectorize. Additionally,
+  the memory access pattern of \texttt{y} would be consecutive compared to scattered when
   vectorizing over \texttt{i} instead of \texttt{j}.}
   \label{fig:outer-loop-vec}
 \end{figure}
 
 \subsection{Function Vectorization}
-Function vectorization refers to the vectorization of full functions. A loop might contain a
-function call, that can not be inlined, passing data related to the iteration variable. During
-auto-vectorization this call would possibly be replaced with a call to a newly constructed function 
-with the same semantic control flow but operating on multiple values at once through vector
-registers instead.
+Function vectorization refers to the vectorization of entire functions. A loop might contain a
+non-inlined function call, passing data related to the iteration variable. During auto-vectorization, 
+this call could be replaced with a call to a newly constructed function with the same semantic 
+control flow but operating on multiple values at once through vector registers instead.
 
 \subsection{Vectorization Similarities}
-All of the above mentioned vectorization categories can be brought into relatation with each other. 
-For example function vectorization can be transformed into loop vectorization by creating a loop 
-around the function body and vectorizing it and vice versa. Similar is true for SLP Vectorization 
-and loop vectorization by unrolling a loop.
+All of the above-mentioned vectorization techniques can be brought into relation with each other. 
+For example, function vectorization can be transformed into loop vectorization by creating a loop 
+around the function body and vectorizing it and vice versa. The same applies for SLP Vectorization 
+and loop vectorization when unrolling a loop.
  
 \subsection{Vectorization Legality}
 Not all loops can be vectorized. There are various factors that can completely hinder any
@@ -162,7 +158,7 @@ Additionally the vectorized code size will always be larger than the scalar equi
 due to many factors: (1) The transformed control flow oftentimes simply includes more instructions.
 (2) As the loop trip count might not be a perfect multiple of the vectorization factor, a scalar
 epilogue/remainder of the loop might be used to handle the tail iterations. (3) Various runtime
-checks might be inserted throughout the vectorized control flow to handle 
+checks might be inserted throughout the vectorized control flow to handle % TODO
 
 
 
