@@ -89,11 +89,11 @@ series = {PLDI 2022}
 }
 
 @online{llvmvplanupdate,
-  author = {Ayal Zaks, Florian Hahn},
+  author = {Hahn, Florian and Zaks, Ayal},
   title = {VPlan: Status Update and Future Roadmap},
   year = {2023},
-  url = {https://www.youtube.com/watch?v=SzGP4PgMuLE},
-  note = {Accessed: 2024-11-02}
+  url = {https://llvm.org/devmtg/2023-10/slides/techtalks/Hahn-VPlan-StatusUpdateAndRoadmap.pdf},
+  note = {Accessed: 2024-11-19}
 }
 
 @online{llvmvplanstate,
@@ -232,6 +232,61 @@ archivePrefix = {arXiv},
   note = {Accessed: 2024-11-11}
 }
 
+@online{llvmboscc,
+  author = {Nema, Ashutosh and Rasale, Anupama},
+  title = {Improving Vectorization for Loops with Control Flow},
+  year = {2023},
+  url = {https://llvm.org/devmtg/2023-05/slides/QuickTalks-May10/05-EuroLLVM23%20-%20Improving%20Vectorization%20for%20Loops%20with%20Control%20Flow.pdf},
+  note = {Accessed: 2024-11-20}
+}
+
+@inproceedings{10.5555/1299042.1299055,
+author = {Shin, Jaewook},
+title = {Introducing Control Flow into Vectorized Code},
+year = {2007},
+isbn = {0769529445},
+publisher = {IEEE Computer Society},
+address = {USA},
+abstract = {Single instruction multiple data (SIMD) functional units are ubiquitous in modern microprocessors. Effective use of these SIMD functional units is essential in achieving the highest possible performance. Automatic generation of SIMD instructions in the presence of control flow is chal- lenging, however, not only because SIMD code is hard to generate in the presence of arbitrarily complex control flow, but also because the SIMD code executing the instructions in all control paths may slow compared to the scalar orig- inal, which may bypass a large portion of the code. One promising technique introduced recently involves inserting branches-on-superword-condition-codes (BOSCCs) to by- pass vector instructions. In this paper, we describe two techniques that improve on the previous approach. First, BOSCCs are generated in a nested fashion so that even BOSCCs themselves can be bypassed by other BOSCCs. Second, we generate all vec_any_* instructions to by- pass even some predicate-defining instructions. We imple- mented these techniques in a vectorizing compiler. On 14 kernels, the compiler achieves distinct speedups, including 1.99X over the previous technique that generates single- level BOSCCs and vec_any_ne only.},
+booktitle = {Proceedings of the 16th International Conference on Parallel Architecture and Compilation Techniques},
+pages = {280–291},
+numpages = {12},
+series = {PACT '07}
+}
+
+@inproceedings{10.5555/3615924.3615932,
+author = {Paktinatkeleshteri, Rouzbeh and de Carvalho, Jo\~{a}o P. L and Amiri, Ehsan and Amaral, J. Nelson},
+title = {Efficient Auto-Vectorization for Control-flow Dependent Loops through Data Permutation},
+year = {2023},
+publisher = {IBM Corp.},
+address = {USA},
+booktitle = {Proceedings of the 33rd Annual International Conference on Computer Science and Software Engineering},
+pages = {74–83},
+numpages = {10},
+keywords = {SIMD, Scalable-Vector Extensions, Compilers},
+location = {Las Vegas, NV, USA},
+series = {CASCON '23}
+}
+
+@article{10.1007/s11227-022-04359-w,
+author = {Praharenka, Wyatt and Pankratz, David and De Carvalho, Jo\~{a}o P. L. and Amiri, Ehsan and Amaral, Jos\'{e} Nelson},
+title = {Vectorizing divergent control flow with active-lane consolidation on long-vector architectures},
+year = {2022},
+issue_date = {Jul 2022},
+publisher = {Kluwer Academic Publishers},
+address = {USA},
+volume = {78},
+number = {10},
+issn = {0920-8542},
+url = {https://doi.org/10.1007/s11227-022-04359-w},
+doi = {10.1007/s11227-022-04359-w},
+journal = {Journal of Supercomputing},
+month = jul,
+pages = {12553–12588},
+numpages = {36},
+keywords = {Instruction-set architecture design, Code generation, Control-flow divergence, Scalable vector extension, Vectorization}
+}
+
 @inproceedings{DBLP:conf/vldb/BensonER23,
   author       = {Lawrence Benson and
                   Richard Ebeling and
@@ -248,21 +303,6 @@ archivePrefix = {arXiv},
   timestamp    = {Thu, 15 Aug 2024 07:54:16 +0200},
   biburl       = {https://dblp.org/rec/conf/vldb/BensonER23.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-
-@inproceedings{10.5555/3615924.3615932,
-author = {Paktinatkeleshteri, Rouzbeh and de Carvalho, Jo\~{a}o P. L and Amiri, Ehsan and Amaral, J. Nelson},
-title = {Efficient Auto-Vectorization for Control-flow Dependent Loops through Data Permutation},
-year = {2023},
-publisher = {IBM Corp.},
-address = {USA},
-abstract = {The presence of control-flow divergence in loops can either hin-der or impede auto-vectorization as a compiler transformation to exploit parallelism enabled by Single-Instruction Multiple-Data (SIMD) instructions. A solution is to linearize control flow through the use of predicated execution. However, computation resources are wasted when predicated instructions are executed but not com-mitted because of a false predicate. Alternative approaches op-timistically avoid predicated instructions when all conditions in a vectorized loop iteration evaluate to the same value. However, dynamic uniformity is less frequent in long vectors. Active-Lane-Consolidation (ALC) was proposed to form uniform vectors dynam-ically by merging active elements from different iterations. In its seminal presentation, ALC was only evaluated in a simulated en-vironment through hand-modified programs. This paper presents the first performance evaluation of ALC on real hardware which reveals that the original design of ALC indeed reduces the number of executed instructions, but it fails to provide speedup over auto-vectorized code. It then presents a change to the design of ALC that results in it outperforming auto-vectorized code and describes the first compiler-enabled transformation that applies ALC as a compiler optimization pass. The experimental results show that compiler-generated ALC code outperforms auto-vectorized code, produced by state-of-the-art compilers, by up to 79\%.},
-booktitle = {Proceedings of the 33rd Annual International Conference on Computer Science and Software Engineering},
-pages = {74–83},
-numpages = {10},
-keywords = {SIMD, Scalable-Vector Extensions, Compilers},
-location = {Las Vegas, NV, USA},
-series = {CASCON '23}
 }
 
 @article{10.1145/2366231.2337210,
