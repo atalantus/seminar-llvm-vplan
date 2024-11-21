@@ -140,7 +140,7 @@ Not all loops can be vectorized. There are various factors that can ultimately h
 vectorization attempts.
 
 Some of the most common vectorization barriers are data dependencies. As the vectorized version
-of a code executes for $N$ (Vectorization Factor) data streams simultaneously, it inherently changes
+of a code executes for Vectorization Factor (VF) $N$ data streams simultaneously, it inherently changes
 the order of operations. To guarantee that the semantics of the code do not change, all
 operations on these $N$ data streams must, generally, be independent. The simplest case
 where this is not provided is when the $i$-th loop iteration depends on any of the $(i-N)$-th 
@@ -199,37 +199,67 @@ explaining the original LoopVectorize structure.
 
 LoopVectorize was designed to focus only on vectorization of innermost loops~\cite{llvmintrvplan}. 
 When starting with a initial scalable loop in IR it will first run a legality phase to check 
-whetever and how it is legal to vectorize the loop. This phase would produce artifacts like if 
+whetever and how it is legal to vectorize the loop. This phase would produce artifacts/maps like if 
 and what runtime aliasing checks would be required. If some vectorization would be legal the 
 cost model would run next, creating more artifacts based on the scalar IR and legality artifacts. 
-These cost model artifacts would associate different vectorization possibilities with a fixed cost.
+These cost model artifacts would associate different vectorization factors with a cost.
 Lastly the transformation phase would vectorize the underlying IR based on all the produced 
 artifacts.
 
-However, this LoopVectorize architecture had several problems. For once extending the rigid system
-to include outer loop and nested loop vectorizations would have been very challenging. Producing
-and considering more and more artifacts when trying to transform the scalar into a vectorized
-loop all at once does not scale well.
+However, this rigid system of LoopVectorize was a problem. Extending LV to include outer loop 
+and nested loop vectorizations would have been very challenging. Producing and considering more and 
+more artifacts when trying to transform the scalar loop into a vectorized one all at once did not 
+scale well.
 
-\subsection{State of Vectorization Plan (VPlan)}
+As a potential solution Intel proposed a long-term effort to refactor LLVM's whole auto-vectorization
+using a system called Vectorization Plan (VPlan)~\cite{llvmextloopvec}.
 
-
-
-
-\subsection{Future of VPlan}
-%\subsection{Integration with LV}
-%\subsection{Outer Loop Vectorization}
-%\subsection{Merging with SLP Vectorize}
-%\subsection{Function Vectorization}
-
+The goal was to unite any auto-vectorization systems (SLP, Inner-/Outer-Loop) into a single flexible
+system~\cite{llvmintrvplan,llvmvplanstate}, as seen in Figure~\ref{fig:vplan-future}. This system would use VPlans to represent different 
+vectorization approaches, abstracted away from the underlying IR. Each VPlan would be able to 
+calculate its cost and transform itself to modify the final IR. At first the Legality 
+phase (yellow) would check if the scalar code would be legal to vectorize at all. If so it would 
+create different initial VPlans, representing the different initial ways to vectorize. In the 
+following Planning phase (magenta) these initial VPlans would be optimized using various 
+VPlan-to-VPlan transformations. Those transformations would be supervised by the VPlan's cost model.
+Finally, the best VPlan would be chosen and materialized/executed to modify the underlying IR.
+The best VPlan might also be to not vectorize at all (VF $=1$).
 
 \begin{figure}
   \centering
   \includegraphics[width=0.475\textwidth]{images/vplan-future.png}
   \caption{The planned future architecture for VPlan. The VPlan optimization would
-  work as iteratievely applying VPlan-to-VPlan transformations.}
+  work as iteratively applying VPlan-to-VPlan transformations.}
   \label{fig:vplan-future}
 \end{figure}
+
+\subsection{Current State of VPlan}
+
+
+
+\subsection{Future of VPlan}
+Many of the VPlan internals and systems surrounding it are still in active development. To stay
+up-to-date with the latest developments regarding auto-vectorization in LLVM one can follow the 
+Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop-optimizations/62}} or
+attend the monthly online 
+meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
+
+\subsubsection{VPlan and Integration with LV}
+The main effort of setting up the VPlan structure and integrating it first into LV has seen
+tremendous effort over the last years. 
+
+\subsubsection{Outer Loop Vectorization}
+Development around outer loop vectorization has slowed down a bit as focus shifted more on VPlan
+internals and integration into LV. 
+
+\subsubsection{Merging with SLP Vectorize}
+Merging the existing SLP Vectorizer with the current VPlan infrastructure is in the early phase
+of planning.
+
+\subsubsection{Function Vectorization}
+As far as we now there is currently no active development for function vectorization in the
+llvm-project's upstream yet.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
