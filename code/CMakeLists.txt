@@ -22,10 +22,16 @@ message(STATUS "LLVM_INSTALL_PREFIX = ${LLVM_INSTALL_PREFIX}")
 add_definitions(${LLVM_DEFINITIONS})
 set(LLVM_LIBS LLVM)
 
-add_executable(simple_loop simple_loop.cpp)
+add_executable(sl simple_loop.cpp)
 
 add_custom_target(
         simple_loop_ir
-        COMMAND ${CMAKE_CXX_COMPILER} -cc1 -O3 -emit-llvm -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize ${CMAKE_CURRENT_SOURCE_DIR}/simple_loop.cpp -o ${CMAKE_BINARY_DIR}/simple_loop.ll
+        COMMAND ${CMAKE_CXX_COMPILER} -O1 -S -emit-llvm -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize -fsave-optimization-record ${CMAKE_CURRENT_SOURCE_DIR}/simple_loop.cpp -o ${CMAKE_BINARY_DIR}/simple_loop.ll
+        DEPENDS simple_loop.cpp
+)
+
+add_custom_target(
+        simple_loop_ir_cc1
+        COMMAND ${CMAKE_CXX_COMPILER} -cc1 -O1 -S -emit-llvm -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize ${CMAKE_CURRENT_SOURCE_DIR}/simple_loop.cpp -o ${CMAKE_BINARY_DIR}/simple_loop.ll
         DEPENDS simple_loop.cpp
 )

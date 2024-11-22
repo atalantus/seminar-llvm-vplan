@@ -15,7 +15,7 @@
 //     }
 // }
 
-void inner_loop_conditional(const int N, float* x, const float* y, const bool* z) {
+void inner_loop_conditional(const int N, float* x, const float* y, const int* z) {
     for (int i = 0; i < N; i++) {
         if (z[i]) {
             x[i] += y[i];
