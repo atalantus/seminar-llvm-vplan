@@ -65,9 +65,9 @@ might also not vectorize at all, is materialized into the LLVM IR.
 LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and is
 already modeling most inner loop vectorizations and transformations~\cite{llvmvplanupdate}. 
 Vectorization for outer loops is also in development and can be enabled by setting 
-the \texttt{-enable-vplan-native-path} flag~\cite{llvmouterloop}. In the future, the plan will 
-be to merge both of these loop vectorization paths into one. Merging the existing SLP Vectorizer
-with VPlan is also planned.
+the \texttt{-enable-vplan-native-path} feature flag~\cite{llvmouterloop,llvmouterloopstatus}. 
+In the future, the plan will be to merge both of these loop vectorization paths into one. 
+Merging the existing SLP Vectorizer with VPlan is also planned.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -233,11 +233,37 @@ modifying the underlying IR. The best VPlan might also be to not vectorize at al
   \label{fig:vplan-future}
 \end{figure}
 
-\subsection{Current State of VPlan}
+\subsection{State of VPlan (LLVM 19.1.4)}
 
-In its current state (LLVM 19.1.4) VPlan is deeply integrated into LV. To better understand the
-current structure of a VPlan, modelling a certain vectorization approach, we will use the
+In its current state VPlan is deeply integrated into LV.
+When auto-vectorizing, LV starts by checking all the different loops in the IR.
+If it finds one, it will try to vectorize it\\(\texttt{LoopVectorizePass::processLoop}).
+Several factors might hinder vectorization for a given loop: 
+(1) If the loop was already vectorized before, it won't be vectorized again. 
+(2) The Legality phase checks if an how it is legal to vectorize the scalar
+loop. (3) The loop's trip count might be too small to make vectorization profitable. (4) The cost
+of runtime checks for e.g. pointer aliasing can be too high.
+
+The initial VPlans are constructed based on the legality checks and the cost decisions the legacy
+LV cost model made referencing the scalar IR\\(\texttt{LoopVectorizationPlanner::plan}). Then the
+optimal Vectorization Factor (VF) and Interleave Count (IC) are picked. 
+The best VPlan is picked based on the optimal VF. A VF of 1 means it is not
+profitable to vectorize the loop, however, interleaving/unrolling can still end up modifying the
+underlying IR.
+
+The best VPlan is then executed\\(\texttt{LoopVectorizationPlanner::executePlan}). In case of
+vectorization (VF $>1$), LV will also directly try to vectorize the epilogue loop.
+
+\subsubsection{VPlan Structure}
+To better understand the
+underlying structure of a VPlan, modelling a certain vectorization approach, we will use the
 simple conditional loop from Figure~\ref{fig:inner-loop-vec} as an example.
+
+Figure~\ref{fig:inner-loop-scalar-ir} shows the IR of the main loop basic blocks \texttt{for.body},
+\texttt{if.then}, and \texttt{for.inc}. Figure~\ref{fig:inner-loop-vplan-hcfg} shows the equivalent
+hierarchical control-flow-graph (CFG) of a VPlan modelling a vectorization approach for this 
+scalar loop.
+
 
 %TODO: Combine inner-loop-scalar-ir figure and inner-loop-vplan-hcfg into a single
 %       double column figure.
@@ -267,7 +293,7 @@ Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop
 attend the monthly online 
 meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
 
-\subsubsection{General VPlan and Integration with LV}
+\subsubsection{VPlan and Integration with LV}
 The main effort of setting up the VPlan structure and integrating it first into LV has seen
 tremendous effort over the last years. Florian Hahn presented future directions for 
 VPlan~\cite{llvmvplanupdate}, which mostly evolve around transforming more LV-based decisions into
@@ -313,7 +339,7 @@ optimization decisions and finally execute the best VPlan to transform IR.
 However, there are still some VPlan-to-VPlan transformations and a VPlan-based cost model missing, 
 before the legacy LV code can be completely discarded.
 
-Outer loop vectorization support for VPlan is still experimental, seperated from the inner loop
+Outer loop vectorization support via VPlan is still experimental, seperated from the inner loop
 LV integration, and runs on a divergent experimental path (\texttt{-enable-vplan-native-path}).
 In the near future development on outer loop vectorization will continue and merging it with LV's
 VPlan path is planned.
