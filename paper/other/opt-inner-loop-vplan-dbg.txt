@@ -1,0 +1,473 @@
+./opt -passes=loop-vectorize -debug-only=loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -vplan-print-in-dot-format -disable-output slm.ll 
+
+
+
+LV: Checking a loop in 'inner_loop_conditional' from slm.ll
+LV: Loop hints: force=? width=4 interleave=1
+LV: Found a loop: for.body
+LV: Found an induction variable.
+LV: Found FP op with unsafe algebra.
+LV: We can vectorize this loop (with a runtime bound check)!
+LV: Loop does not require scalar epilogue
+LV: Found trip count: 0
+LV: Found maximum trip count: 2147483647
+LV: The max safe fixed VF is: 67108864.
+LV: The max safe scalable VF is: vscale x 0.
+
+
+
+LV: Found uniform instruction:   %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+LV: Found uniform instruction:   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+LV: Found scalar instruction:   %arrayidx2 = getelementptr inbounds float, ptr %y, i64 %indvars.iv
+LV: Found scalar instruction:   %arrayidx4 = getelementptr inbounds float, ptr %x, i64 %indvars.iv
+LV: Found scalar instruction:   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.inc ]
+LV: Found scalar instruction:   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.inc ]
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %0 = load i8, ptr %arrayidx, align 1
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %tobool.not = icmp eq i8 %0, 0
+LV: Found an estimated cost of 4 for VF 4 For instruction:   br i1 %tobool.not, label %for.inc, label %if.then
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx2 = getelementptr inbounds float, ptr %y, i64 %indvars.iv
+LV: Found an estimated cost of 3000000 for VF 4 For instruction:   %1 = load float, ptr %arrayidx2, align 4
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx4 = getelementptr inbounds float, ptr %x, i64 %indvars.iv
+LV: Found an estimated cost of 3000000 for VF 4 For instruction:   %2 = load float, ptr %arrayidx4, align 4
+LV: Found an estimated cost of 2 for VF 4 For instruction:   %add = fadd float %1, %2
+LV: Found an estimated cost of 2 for VF 4 For instruction:   store float %add, ptr %arrayidx4, align 4
+LV: Found an estimated cost of 0 for VF 4 For instruction:   br label %for.inc
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+LV: Found an estimated cost of 1 for VF 4 For instruction:   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
+
+
+
+LV: Using user VF 4.
+LV: Loop does not require scalar epilogue
+LV: Scalarizing:  %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+LV: Scalarizing:  %arrayidx2 = getelementptr inbounds float, ptr %y, i64 %indvars.iv
+LV: Scalarizing and predicating:  %1 = load float, ptr %arrayidx2, align 4
+LV: Scalarizing:  %arrayidx4 = getelementptr inbounds float, ptr %x, i64 %indvars.iv
+LV: Scalarizing and predicating:  %2 = load float, ptr %arrayidx4, align 4
+LV: Scalarizing:  %add = fadd float %1, %2
+LV: Scalarizing and predicating:  store float %add, ptr %arrayidx4, align 4
+LV: Scalarizing:  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+LV: Scalarizing:  %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+
+
+
+digraph VPlan {
+graph [labelloc=t, fontsize=30; label="Vectorization Plan\nInitial VPlan for VF=\{4\},UF\>=1\nLive-in vp\<%0\> = VF * UF\nLive-in vp\<%1\> = vector-trip-count\nvp\<%2\> = original trip-count\n"]
+node [shape=rect, fontname=Courier, fontsize=30]
+edge [fontname=Courier, fontsize=30]
+compound=true
+  N0 [label =
+    "ir-bb\<for.body.preheader\>:\l" +
+    "  IR   %wide.trip.count = zext nneg i32 %N to i64\l" +
+    "  EMIT vp\<%2\> = EXPAND SCEV (zext i32 %N to i64)\l" +
+    "No successors\l"
+  ]
+  N1 [label =
+    "vector.ph:\l" +
+    "Successor(s): vector loop\l"
+  ]
+  N1 -> N2 [ label="" lhead=cluster_N3]
+  subgraph cluster_N3 {
+    fontname=Courier
+    label="\<x1\> vector loop"
+    N2 [label =
+      "vector.body:\l" +
+      "  EMIT vp\<%3\> = CANONICAL-INDUCTION ir\<0\>, vp\<%index.next\>\l" +
+      "  vp\<%4\> = SCALAR-STEPS vp\<%3\>, ir\<1\>\l" +
+      "  CLONE ir\<%arrayidx\> = getelementptr inbounds ir\<%z\>, vp\<%4\>\l" +
+      "  vp\<%5\> = vector-pointer ir\<%arrayidx\>\l" +
+      "  WIDEN ir\<%0\> = load vp\<%5\>\l" +
+      "  WIDEN ir\<%tobool.not\> = icmp eq ir\<%0\>, ir\<0\>\l" +
+      "  EMIT vp\<%6\> = not ir\<%tobool.not\>\l" +
+      "Successor(s): pred.store\l"
+    ]
+    N2 -> N4 [ label="" lhead=cluster_N5]
+    subgraph cluster_N5 {
+      fontname=Courier
+      label="\<xVFxUF\> pred.store"
+      N4 [label =
+        "pred.store.entry:\l" +
+        "  BRANCH-ON-MASK vp\<%6\>\l" +
+        "Successor(s): pred.store.if, pred.store.continue\l"
+      ]
+      N4 -> N6 [ label="T"]
+      N4 -> N7 [ label="F"]
+      N6 [label =
+        "pred.store.if:\l" +
+        "  REPLICATE ir\<%arrayidx2\> = getelementptr inbounds ir\<%y\>, vp\<%4\>\l" +
+        "  REPLICATE ir\<%1\> = load ir\<%arrayidx2\>\l" +
+        "  REPLICATE ir\<%arrayidx4\> = getelementptr inbounds ir\<%x\>, vp\<%4\>\l" +
+        "  REPLICATE ir\<%2\> = load ir\<%arrayidx4\>\l" +
+        "  REPLICATE ir\<%add\> = fadd ir\<%1\>, ir\<%2\>\l" +
+        "  REPLICATE store ir\<%add\>, ir\<%arrayidx4\>\l" +
+        "Successor(s): pred.store.continue\l"
+      ]
+      N6 -> N7 [ label=""]
+      N7 [label =
+        "pred.store.continue:\l" +
+        "No successors\l"
+      ]
+    }
+    N7 -> N8 [ label="" ltail=cluster_N5]
+    N8 [label =
+      "if.then.2:\l" +
+      "  EMIT vp\<%index.next\> = add nuw vp\<%3\>, vp\<%0\>\l" +
+      "  EMIT branch-on-count vp\<%index.next\>, vp\<%1\>\l" +
+      "No successors\l"
+    ]
+  }
+  N8 -> N9 [ label="" ltail=cluster_N3]
+  N9 [label =
+    "middle.block:\l" +
+    "  EMIT vp\<%cmp.n\> = icmp eq vp\<%2\>, vp\<%1\>\l" +
+    "  EMIT branch-on-cond vp\<%cmp.n\>\l" +
+    "Successor(s): ir-bb\<for.cond.cleanup.loopexit\>, scalar.ph\l"
+  ]
+  N9 -> N10 [ label="T"]
+  N9 -> N11 [ label="F"]
+  N10 [label =
+    "ir-bb\<for.cond.cleanup.loopexit\>:\l" +
+    "No successors\l"
+  ]
+  N11 [label =
+    "scalar.ph:\l" +
+    "Successor(s): ir-bb\<for.body\>\l"
+  ]
+  N11 -> N12 [ label=""]
+  N12 [label =
+    "ir-bb\<for.body\>:\l" +
+    "  IR   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.inc ]\l" +
+    "  IR   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv\l" +
+    "  IR   %0 = load i8, ptr %arrayidx, align 1\l" +
+    "  IR   %tobool.not = icmp eq i8 %0, 0\l" +
+    "No successors\l"
+  ]
+}
+
+
+
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.inc ]
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %0 = load i8, ptr %arrayidx, align 1
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %tobool.not = icmp eq i8 %0, 0
+LV: Found an estimated cost of 4 for VF 4 For instruction:   br i1 %tobool.not, label %for.inc, label %if.then
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx2 = getelementptr inbounds float, ptr %y, i64 %indvars.iv
+LV: Found an estimated cost of 3000000 for VF 4 For instruction:   %1 = load float, ptr %arrayidx2, align 4
+LV: Found an estimated cost of 0 for VF 4 For instruction:   %arrayidx4 = getelementptr inbounds float, ptr %x, i64 %indvars.iv
+LV: Found an estimated cost of 3000000 for VF 4 For instruction:   %2 = load float, ptr %arrayidx4, align 4
+LV: Found an estimated cost of 2 for VF 4 For instruction:   %add = fadd float %1, %2
+LV: Found an estimated cost of 2 for VF 4 For instruction:   store float %add, ptr %arrayidx4, align 4
+LV: Found an estimated cost of 0 for VF 4 For instruction:   br label %for.inc
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+LV: Found an estimated cost of 1 for VF 4 For instruction:   %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+LV: Found an estimated cost of 1 for VF 4 For instruction:   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
+
+
+
+LV(REG): Calculating max register usage:
+LV(REG): At #0 Interval # 0
+LV(REG): At #1 Interval # 1
+LV(REG): At #2 Interval # 2
+LV(REG): At #3 Interval # 2
+LV(REG): At #5 Interval # 1
+LV(REG): At #6 Interval # 2
+LV(REG): At #7 Interval # 2
+LV(REG): At #8 Interval # 3
+LV(REG): At #9 Interval # 4
+LV(REG): At #12 Interval # 1
+LV(REG): At #13 Interval # 1
+LV(REG): VF = 4
+LV(REG): Found max usage: 2 item
+LV(REG): RegisterClass: Generic::ScalarRC, 2 registers
+LV(REG): RegisterClass: Generic::VectorRC, 2 registers
+LV(REG): Found invariant usage: 1 item
+LV(REG): RegisterClass: Generic::ScalarRC, 1 registers
+LV: The target has 8 registers of Generic::ScalarRC register class
+LV: The target has 8 registers of Generic::VectorRC register class
+LV: Loop does not require scalar epilogue
+LV: Loop cost is 6000014
+LV: IC is 1
+LV: VF is 4
+LV: Not Interleaving.
+Calculating cost of runtime checks:
+  1  for   %0 = shl nuw nsw i64 %wide.trip.count, 2
+  0  for   %scevgep = getelementptr i8, ptr %x, i64 %0
+  0  for   %scevgep1 = getelementptr i8, ptr %z, i64 %wide.trip.count
+  0  for   %scevgep2 = getelementptr i8, ptr %y, i64 %0
+  1  for   %bound0 = icmp ult ptr %x, %scevgep1
+  1  for   %bound1 = icmp ult ptr %z, %scevgep
+  1  for   %found.conflict = and i1 %bound0, %bound1
+  1  for   %bound03 = icmp ult ptr %x, %scevgep2
+  1  for   %bound14 = icmp ult ptr %y, %scevgep
+  1  for   %found.conflict5 = and i1 %bound03, %bound14
+  1  for   %conflict.rdx = or i1 %found.conflict, %found.conflict5
+Total cost of runtime checks: 8
+LV: Interleaving is not beneficial.
+LV: Found a vectorizable loop (4) in slm.ll
+LEV: Epilogue vectorization is not profitable for this loop
+
+
+
+Executing best plan with VF=4, UF=1
+VPlan 'Final VPlan for VF={4},UF={1}' {
+Live-in vp<%0> = VF * UF
+Live-in vp<%1> = vector-trip-count
+vp<%2> = original trip-count
+
+ir-bb<for.body.preheader>:
+  IR   %wide.trip.count = zext nneg i32 %N to i64
+  EMIT vp<%2> = EXPAND SCEV (zext i32 %N to i64)
+No successors
+
+vector.ph:
+Successor(s): vector loop
+
+<x1> vector loop: {
+  vector.body:
+    EMIT vp<%3> = CANONICAL-INDUCTION ir<0>, vp<%index.next>
+    vp<%4> = SCALAR-STEPS vp<%3>, ir<1>
+    CLONE ir<%arrayidx> = getelementptr inbounds ir<%z>, vp<%4>
+    vp<%5> = vector-pointer ir<%arrayidx>
+    WIDEN ir<%1> = load vp<%5>
+    WIDEN ir<%tobool.not> = icmp eq ir<%1>, ir<0>
+    EMIT vp<%6> = not ir<%tobool.not>
+  Successor(s): pred.store
+
+  <xVFxUF> pred.store: {
+    pred.store.entry:
+      BRANCH-ON-MASK vp<%6>
+    Successor(s): pred.store.if, pred.store.continue
+
+    pred.store.if:
+      REPLICATE ir<%arrayidx2> = getelementptr inbounds ir<%y>, vp<%4>
+      REPLICATE ir<%2> = load ir<%arrayidx2>
+      REPLICATE ir<%arrayidx4> = getelementptr inbounds ir<%x>, vp<%4>
+      REPLICATE ir<%3> = load ir<%arrayidx4>
+      REPLICATE ir<%add> = fadd ir<%2>, ir<%3>
+      REPLICATE store ir<%add>, ir<%arrayidx4>
+    Successor(s): pred.store.continue
+
+    pred.store.continue:
+    No successors
+  }
+  Successor(s): if.then.2
+
+  if.then.2:
+    EMIT vp<%index.next> = add nuw vp<%3>, vp<%0>
+    EMIT branch-on-count vp<%index.next>, vp<%1>
+  No successors
+}
+Successor(s): middle.block
+
+middle.block:
+  EMIT vp<%cmp.n> = icmp eq vp<%2>, vp<%1>
+  EMIT branch-on-cond vp<%cmp.n>
+Successor(s): ir-bb<for.cond.cleanup.loopexit>, scalar.ph
+
+ir-bb<for.cond.cleanup.loopexit>:
+No successors
+
+scalar.ph:
+Successor(s): ir-bb<for.body>
+
+ir-bb<for.body>:
+  IR   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.inc ]
+  IR   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+  IR   %1 = load i8, ptr %arrayidx, align 1
+  IR   %tobool.not = icmp eq i8 %1, 0
+No successors
+}
+
+
+
+LV: vectorizing VPBB:ir-bb<for.body.preheader> in BB:for.body.preheader
+LV: filled BB:
+for.body.preheader:                               ; preds = %entry
+  %wide.trip.count = zext nneg i32 %N to i64
+  br label %for.body
+LV: Loop does not require scalar epilogue
+LV: Loop does not require scalar epilogue
+LV: vectorizing VPBB:vector.ph in BB:vector.ph
+LV: filled BB:
+vector.ph:                                        ; preds = %vector.memcheck
+  %n.mod.vf = urem i64 %wide.trip.count, 4
+  %n.vec = sub i64 %wide.trip.count, %n.mod.vf
+  br
+LV: VPBlock in RPO vector.body
+LV: created vector.body
+LV: draw edge fromvector.ph
+LV: vectorizing VPBB:vector.body in BB:vector.body
+LV: filled BB:
+vector.body:                                      ; preds = %vector.ph
+  %index = phi i64 [ 0, %vector.ph ]
+  %1 = add i64 %index, 0
+  %2 = add i64 %index, 1
+  %3 = add i64 %index, 2
+  %4 = add i64 %index, 3
+  %5 = getelementptr inbounds i8, ptr %z, i64 %1
+  %6 = getelementptr inbounds i8, ptr %5, i32 0
+  %wide.load = load <4 x i8>, ptr %6, align 1, !alias.scope !0
+  %7 = icmp eq <4 x i8> %wide.load, zeroinitializer
+  %8 = xor <4 x i1> %7, splat (i1 true)
+  unreachable
+LV: VPBlock in RPO pred.store
+LV: VPBlock in RPO pred.store.entry
+LV: vectorizing VPBB:pred.store.entry in BB:vector.body
+LV: filled BB:
+vector.body:                                      ; preds = %vector.ph
+  %index = phi i64 [ 0, %vector.ph ]
+  %1 = add i64 %index, 0
+  %2 = add i64 %index, 1
+  %3 = add i64 %index, 2
+  %4 = add i64 %index, 3
+  %5 = getelementptr inbounds i8, ptr %z, i64 %1
+  %6 = getelementptr inbounds i8, ptr %5, i32 0
+  %wide.load = load <4 x i8>, ptr %6, align 1, !alias.scope !0
+  %7 = icmp eq <4 x i8> %wide.load, zeroinitializer
+  %8 = xor <4 x i1> %7, splat (i1 true)
+  %9 = extractelement <4 x i1> %8, i32 0
+  br i1 %9, <null operand!>, <null operand!>
+LV: VPBlock in RPO pred.store.if
+LV: created pred.store.if
+LV: draw edge fromvector.body
+LV: vectorizing VPBB:pred.store.if in BB:pred.store.if
+LV: filled BB:
+pred.store.if:                                    ; preds = %vector.body
+  %10 = getelementptr inbounds float, ptr %y, i64 %1
+  %11 = load float, ptr %10, align 4, !alias.scope !3
+  %12 = getelementptr inbounds float, ptr %x, i64 %1
+  %13 = load float, ptr %12, align 4, !alias.scope !5, !noalias !7
+  %14 = fadd float %11, %13
+  store float %14, ptr %12, align 4, !alias.scope !5, !noalias !7
+  unreachable
+LV: VPBlock in RPO pred.store.continue
+LV: created pred.store.continue
+LV: draw edge fromvector.body
+LV: draw edge frompred.store.if
+LV: vectorizing VPBB:pred.store.continue in BB:pred.store.continue
+LV: filled BB:
+pred.store.continue:                              ; preds = %pred.store.if, %vector.body
+  unreachable
+LV: VPBlock in RPO pred.store.entry
+LV: vectorizing VPBB:pred.store.entry in BB:pred.store.continue
+LV: filled BB:
+pred.store.continue:                              ; preds = %pred.store.if, %vector.body
+  %15 = extractelement <4 x i1> %8, i32 1
+  br i1 %15, <null operand!>, <null operand!>
+LV: VPBlock in RPO pred.store.if
+LV: created pred.store.if6
+LV: draw edge frompred.store.continue
+LV: vectorizing VPBB:pred.store.if in BB:pred.store.if6
+LV: filled BB:
+pred.store.if6:                                   ; preds = %pred.store.continue
+  %16 = getelementptr inbounds float, ptr %y, i64 %2
+  %17 = load float, ptr %16, align 4, !alias.scope !3
+  %18 = getelementptr inbounds float, ptr %x, i64 %2
+  %19 = load float, ptr %18, align 4, !alias.scope !5, !noalias !7
+  %20 = fadd float %17, %19
+  store float %20, ptr %18, align 4, !alias.scope !5, !noalias !7
+  unreachable
+LV: VPBlock in RPO pred.store.continue
+LV: created pred.store.continue7
+LV: draw edge frompred.store.continue
+LV: draw edge frompred.store.if6
+LV: vectorizing VPBB:pred.store.continue in BB:pred.store.continue7
+LV: filled BB:
+pred.store.continue7:                             ; preds = %pred.store.if6, %pred.store.continue
+  unreachable
+LV: VPBlock in RPO pred.store.entry
+LV: vectorizing VPBB:pred.store.entry in BB:pred.store.continue7
+LV: filled BB:
+pred.store.continue7:                             ; preds = %pred.store.if6, %pred.store.continue
+  %21 = extractelement <4 x i1> %8, i32 2
+  br i1 %21, <null operand!>, <null operand!>
+LV: VPBlock in RPO pred.store.if
+LV: created pred.store.if8
+LV: draw edge frompred.store.continue7
+LV: vectorizing VPBB:pred.store.if in BB:pred.store.if8
+LV: filled BB:
+pred.store.if8:                                   ; preds = %pred.store.continue7
+  %22 = getelementptr inbounds float, ptr %y, i64 %3
+  %23 = load float, ptr %22, align 4, !alias.scope !3
+  %24 = getelementptr inbounds float, ptr %x, i64 %3
+  %25 = load float, ptr %24, align 4, !alias.scope !5, !noalias !7
+  %26 = fadd float %23, %25
+  store float %26, ptr %24, align 4, !alias.scope !5, !noalias !7
+  unreachable
+LV: VPBlock in RPO pred.store.continue
+LV: created pred.store.continue9
+LV: draw edge frompred.store.continue7
+LV: draw edge frompred.store.if8
+LV: vectorizing VPBB:pred.store.continue in BB:pred.store.continue9
+LV: filled BB:
+pred.store.continue9:                             ; preds = %pred.store.if8, %pred.store.continue7
+  unreachable
+LV: VPBlock in RPO pred.store.entry
+LV: vectorizing VPBB:pred.store.entry in BB:pred.store.continue9
+LV: filled BB:
+pred.store.continue9:                             ; preds = %pred.store.if8, %pred.store.continue7
+  %27 = extractelement <4 x i1> %8, i32 3
+  br i1 %27, <null operand!>, <null operand!>
+LV: VPBlock in RPO pred.store.if
+LV: created pred.store.if10
+LV: draw edge frompred.store.continue9
+LV: vectorizing VPBB:pred.store.if in BB:pred.store.if10
+LV: filled BB:
+pred.store.if10:                                  ; preds = %pred.store.continue9
+  %28 = getelementptr inbounds float, ptr %y, i64 %4
+  %29 = load float, ptr %28, align 4, !alias.scope !3
+  %30 = getelementptr inbounds float, ptr %x, i64 %4
+  %31 = load float, ptr %30, align 4, !alias.scope !5, !noalias !7
+  %32 = fadd float %29, %31
+  store float %32, ptr %30, align 4, !alias.scope !5, !noalias !7
+  unreachable
+LV: VPBlock in RPO pred.store.continue
+LV: created pred.store.continue11
+LV: draw edge frompred.store.continue9
+LV: draw edge frompred.store.if10
+LV: vectorizing VPBB:pred.store.continue in BB:pred.store.continue11
+LV: filled BB:
+pred.store.continue11:                            ; preds = %pred.store.if10, %pred.store.continue9
+  unreachable
+LV: VPBlock in RPO if.then.2
+LV: vectorizing VPBB:if.then.2 in BB:pred.store.continue11
+LV: filled BB:
+pred.store.continue11:                            ; preds = %pred.store.if10, %pred.store.continue9
+  %index.next = add nuw i64 %index, 4
+  %33 = icmp eq i64 %index.next, %n.vec
+  br i1 %33, <null operand!>, label %vector.body
+LV: vectorizing VPBB:ir-bb<middle.block> in BB:middle.block
+LV: filled BB:
+middle.block:                                     ; No predecessors!
+  %cmp.n = icmp eq i64 %wide.trip.count, %n.vec
+  br i1 %cmp.n, <null operand!>, <null operand!>
+LV: draw edge frompred.store.continue11
+LV: vectorizing VPBB:ir-bb<for.cond.cleanup.loopexit> in BB:for.cond.cleanup.loopexit
+LV: filled BB:
+for.cond.cleanup.loopexit:                        ; preds = %for.inc
+  br label %for.cond.cleanup
+LV: draw edge frommiddle.block
+LV: vectorizing VPBB:ir-bb<scalar.ph> in BB:scalar.ph
+LV: filled BB:
+scalar.ph:                                        ; preds = %vector.memcheck, %for.body.preheader
+  %bc.resume.val = phi i64 [ %n.vec, %middle.block ], [ 0, %for.body.preheader ], [ 0, %vector.memcheck ]
+  br label %for.body
+LV: draw edge frommiddle.block
+LV: vectorizing VPBB:ir-bb<for.body> in BB:for.body
+LV: filled BB:
+for.body:                                         ; preds = %for.inc, %scalar.ph
+  %indvars.iv = phi i64 [ %bc.resume.val, %scalar.ph ], [ %indvars.iv.next, %for.inc ]
+  %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
+  %34 = load i8, ptr %arrayidx, align 1
+  %tobool.not = icmp eq i8 %34, 0
+  br i1 %tobool.not, label %for.inc, label %if.then
+LV: draw edge fromscalar.ph
+
+
+
+LV: Interleaving disabled by the pass manager
+LV: Loop does not require scalar epilogue
+LV: Vectorizing: innermost loop.
