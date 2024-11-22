@@ -10,7 +10,6 @@
 \usepackage{todonotes}
 \usepackage[babel]{csquotes}
 
-
 \begin{document}
 \title{Utilizing Parallel Workers: \\LLVM's Vectorization Plan}
 \author{Jonas Fritsch}
@@ -236,16 +235,30 @@ modifying the underlying IR. The best VPlan might also be to not vectorize at al
 
 \subsection{Current State of VPlan}
 
-In its current state (LLVM 19.1.4) VPlan is deeply integrated into LV. 
+In its current state (LLVM 19.1.4) VPlan is deeply integrated into LV. To better understand the
+current structure of a VPlan, modelling a certain vectorization approach, we will use the
+simple conditional loop from Figure~\ref{fig:inner-loop-vec} as an example.
 
-
-\begin{figure*}[ht!]
+%TODO: Combine inner-loop-scalar-ir figure and inner-loop-vplan-hcfg into a single
+%       double column figure.
+\begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{images/inner-loop-vplan-hcfg.png}
-  \caption{Hierarchical CFG of a VPlan modelling the vectorized version of the loop in 
-  Figure~\ref{fig:inner-loop-vec}.}
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir.png}
+  \caption{The scalar IR for the main loop part of the conditional loop depicted in
+  Figure~\ref{fig:inner-loop-vec}. Note that \texttt{getelementptr inbounds}
+  was abbreviated to \texttt{getelmptr inbs}.}
+  \label{fig:inner-loop-scalar-ir}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-2.png}
+  \caption{The vectorized loop part of a hierarchical CFG of a VPlan modelling the conditional loop
+  depicted in Figure~\ref{fig:inner-loop-vec}. This VPlan has a VF of 4. Note that some keywords
+  are abbreviated: \texttt{arrayidx} $\equiv$ \texttt{arridx}; 
+  \texttt{getelementptr inbounds} $\equiv$ \texttt{getelmptr inbs}}
   \label{fig:inner-loop-vplan-hcfg}
-\end{figure*}
+\end{figure}
 
 \subsection{Future of VPlan}
 Many of the VPlan internals and systems surrounding it are still in active development. To stay
@@ -294,12 +307,35 @@ Lorem ipsum
 
 \section{Summary and Future Work}
 \label{sec:summary}
-Lorem ipsum
+In conclusion, VPlan has been in active development for several years now. When compiling with
+LLVM VPlan is used to model initial vectorization approaches, keep track of different
+optimization decisions and finally execute the best VPlan to transform IR. 
+However, there are still some VPlan-to-VPlan transformations and a VPlan-based cost model missing, 
+before the legacy LV code can be completely discarded.
 
+Outer loop vectorization support for VPlan is still experimental, seperated from the inner loop
+LV integration, and runs on a divergent experimental path (\texttt{-enable-vplan-native-path}).
+In the near future development on outer loop vectorization will continue and merging it with LV's
+VPlan path is planned.
+
+Active development of other approaches such as SLP and whole-function vectorization based on the 
+VPlan architecture has not been started yet.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{paper} % read paper.bib file
+
+\appendix
+
+\section{Appendix: Additional Figures}
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\textwidth]{images/inner-loop-vplan-hcfg.png}
+  \caption{Full hierarchical CFG of a VPlan modelling the vectorized version of the loop 
+  depicted in Figure~\ref{fig:inner-loop-vec} as of LLVM 19.1.4.}
+  \label{fig:inner-loop-vplan-hcfg}
+\end{figure*}
 
 \end{document}

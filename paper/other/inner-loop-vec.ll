@@ -1,6 +1,3 @@
-; ModuleID = 'slm.ll'
-source_filename = "slm.ll"
-
 define void @inner_loop_conditional(i32 %N, ptr %x, ptr %y, ptr %z) {
 entry:
   %cmp9 = icmp sgt i32 %N, 0
