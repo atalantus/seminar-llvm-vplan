@@ -218,12 +218,11 @@ The goal was to unite any auto-vectorization systems (SLP, Inner-/Outer-Loop) in
 system~\cite{llvmintrvplan,llvmvplanstate}, as seen in Figure~\ref{fig:vplan-future}. This system would use VPlans to represent different 
 vectorization approaches, abstracted away from the underlying IR. Each VPlan would be able to 
 calculate its cost and transform itself to modify the final IR. At first the Legality 
-phase (yellow) would check if the scalar code would be legal to vectorize at all. If so it would 
-create different initial VPlans, representing the different initial ways to vectorize. In the 
-following Planning phase (magenta) these initial VPlans would be optimized using various 
-VPlan-to-VPlan transformations. Those transformations would be supervised by the VPlan's cost model.
-Finally, the best VPlan would be chosen and materialized/executed to modify the underlying IR.
-The best VPlan might also be to not vectorize at all (VF $=1$).
+phase (yellow) would check if the scalar code would be legal to vectorize at all and if so initial 
+VPlans would be constructed. In the following Planning phase (magenta) these initial VPlans would 
+be optimized using various VPlan-to-VPlan transformations. Those transformations would be supervised 
+by the VPlan's cost model. Finally, the best VPlan would be chosen and materialized/executed, 
+modifying the underlying IR. The best VPlan might also be to not vectorize at all (VF $=1$).
 
 \begin{figure}
   \centering
@@ -235,7 +234,16 @@ The best VPlan might also be to not vectorize at all (VF $=1$).
 
 \subsection{Current State of VPlan}
 
+In its current state (LLVM 19.1.4) VPlan is deeply integrated into LV. 
 
+
+\begin{figure*}[ht!]
+  \centering
+  \includegraphics[width=\textwidth]{images/inner-loop-vplan-hcfg.png}
+  \caption{Hierarchical CFG of a VPlan modelling the vectorized version of the loop in 
+  Figure~\ref{fig:inner-loop-vec}.}
+  \label{fig:inner-loop-vplan-hcfg}
+\end{figure*}
 
 \subsection{Future of VPlan}
 Many of the VPlan internals and systems surrounding it are still in active development. To stay
@@ -244,13 +252,19 @@ Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop
 attend the monthly online 
 meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
 
-\subsubsection{VPlan and Integration with LV}
+\subsubsection{General VPlan and Integration with LV}
 The main effort of setting up the VPlan structure and integrating it first into LV has seen
-tremendous effort over the last years. 
+tremendous effort over the last years. Florian Hahn presented future directions for 
+VPlan~\cite{llvmvplanupdate}, which mostly evolve around transforming more LV-based decisions into
+explicit VPlan-to-VPlan transformations. Additionally, a lot of cost model related decisions 
+still end up being influenced by the old legacy LV cost model, however, transition to a VPlan-based 
+cost model has already started.
 
 \subsubsection{Outer Loop Vectorization}
-Development around outer loop vectorization has slowed down a bit as focus shifted more on VPlan
-internals and integration into LV. 
+Development around outer loop vectorization has slowed down a bit as focus shifted more onto VPlan
+internals and integration into LV. The inner loop path and outer loop path are currently still
+seperated by the experimental \texttt{-enable-vplan-native-path} flag. Further developing the 
+outer loop path and eventually merging it with the innermost loop path is planned.
 
 \subsubsection{Merging with SLP Vectorize}
 Merging the existing SLP Vectorizer with the current VPlan infrastructure is in the early phase
