@@ -192,24 +192,26 @@ to overlapping memory regions, in which case the scalar version of the loop is e
 
 \section{LLVM's Vectorization Plan}
 \label{sec:vplan}
-Originally LLVM implements two different vectorizers for auto-vectorization, LoopVectorize (LV)
+
+\subsection{History}
+LLVM implements two different vectorizers for auto-vectorization, LoopVectorize (LV)
 and SLPVectorize. These vectorizers are a part of LLVM's middle-end and run after module 
-simplification. As VPlan has not yet been integrated into SLP-Vectorization we will only focus on
-explaining the original LoopVectorize structure.
+simplification has taken place. As VPlan has not yet been integrated into SLP-Vectorization 
+we will only focus on explaining the original LoopVectorize structure.
 
 LoopVectorize was designed to focus only on vectorization of innermost loops~\cite{llvmintrvplan}. 
-When starting with a initial scalable loop in IR it will first run a legality phase to check 
+When starting with a initial scalable loop in IR it would first run a legality phase to check 
 whetever and how it is legal to vectorize the loop. This phase would produce artifacts/maps like if 
-and what runtime aliasing checks would be required. If some vectorization would be legal the 
-cost model would run next, creating more artifacts based on the scalar IR and legality artifacts. 
-These cost model artifacts would associate different vectorization factors with a cost.
-Lastly the transformation phase would vectorize the underlying IR based on all the produced 
-artifacts.
+and what runtime aliasing checks would be required. Then the cost model ran next, creating more 
+artifacts based on the scalar IR and legality artifacts. These cost model artifacts would 
+associate different vectorization factors with a cost. Lastly the transformation phase would 
+vectorize the underlying IR in one go based on all the produced artifacts.
 
-However, this rigid system of LoopVectorize was a problem. Extending LV to include outer loop 
-and nested loop vectorizations would have been very challenging. Producing and considering more and 
-more artifacts when trying to transform the scalar loop into a vectorized one all at once did not 
-scale well.
+However, this rigid flow of LoopVectorize was a problem. Extending LV to include outer loop 
+and nested loop vectorizations would have been very challenging, as LV was designed to flatten a
+loops control flow into a single basic block. Producing and considering more and 
+more artifacts when trying to transform the scalar loop into a vectorized one all at once did also 
+not scale well.
 
 As a potential solution Intel proposed a long-term effort to refactor LLVM's whole auto-vectorization
 using a system called Vectorization Plan (VPlan)~\cite{llvmextloopvec}.
@@ -271,7 +273,7 @@ Merging the existing SLP Vectorizer with the current VPlan infrastructure is in 
 of planning.
 
 \subsubsection{Function Vectorization}
-As far as we now there is currently no active development for function vectorization in the
+As far as we now there is currently no active development for whole-function vectorization in the
 llvm-project's upstream yet.
 
 
