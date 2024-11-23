@@ -288,7 +288,7 @@ in Appendix~\ref{appendix-figures} for the fully modeled HCFG.
 \begin{figure}
   \centering
   \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir-color.png}
-  \caption{The scalar IR for the main loop part of the conditional loop depicted in
+  \caption{The scalar IR for the main loop section of the conditional loop depicted in
   Figure~\ref{fig:inner-loop-vec}. Note that \texttt{getelementptr inbounds}
   was abbreviated to \texttt{getelmptr inbs}.}
   \label{fig:inner-loop-scalar-ir}
@@ -297,70 +297,68 @@ in Appendix~\ref{appendix-figures} for the fully modeled HCFG.
 \begin{figure}
   \centering
   \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-color.png}
-  \caption{The vectorized loop part of a hierarchical CFG of a VPlan modelling the conditional loop
+  \caption{The vectorized loop section of the hierarchical CFG of a VPlan modeling the conditional loop
   depicted in Figure~\ref{fig:inner-loop-vec}. Some predefined values are
   \texttt{vp<\%0>} = VF * UF; \texttt{vp<\%1>} = vector-trip-count; \texttt{vp<\%2>} = original trip-count.}
   \label{fig:inner-loop-vplan-hcfg-body}
 \end{figure}
 
-The different colored parts in the scalar IR can be found with the same color in the modeled VPlan.
-The only completely new part that VPlan models in this example is the handling of the scalar epilogue
-loop (purple).
+The different colored parts in the scalar IR map to the modeled VPlan region with the same color.
+The only new part that VPlan models in this example is handling the scalar epilogue loop (purple).
 
 The hierarchical CFG of a VPlan helps abstract it away from the underlying IR. The nodes of this CFG
 are either \texttt{VPBasicBlocks}, containing a sequence of one or more \texttt{VPRecipes}, or
-\texttt{VPRegionBlocks}, modelling a single-entry-single-exit subgraph.
-In our example the \texttt{vector.body} is a basic block and \texttt{vector loop} is a region block.
+\texttt{VPRegionBlocks}, modeling a single-entry-single-exit subgraph.
+In the example, \texttt{vector loop} is a region block. All other blocks are basic blocks.
 
-\texttt{VPRegionBlocks} can indicate that their contents are to be replicated a certain number of times,
-to model more complex control flow for different VF, UF combinations more efficiently in a single VPlan. 
-In our example \texttt{vector loop} is not to be replicated (\texttt{<x1>}).
+\texttt{VPRegionBlocks} can indicate that their contents are to be replicated a certain number of times
+to model more complex control flow for different VF-UF combinations more efficiently in a single VPlan. 
+In Figure~\ref{fig:inner-loop-vplan-hcfg-body}, \texttt{vector loop} is not to be replicated (\texttt{<x1>}).
 
-Inside our two \texttt{VPBasicBlocks} we have a list of recipes (lines of instructions). A recipe
-models one or more instructions in the executed IR and can be based on one or more instructions.
-from the input IR (ingredients). Note that a recipe might also model a instruction with no reference to any input
-IR (in our example this would be the inversion of our vector mask). There are different types of 
+Within our two \texttt{VPBasicBlocks} are lists of recipes (lines of instructions). A recipe
+models one or more instructions in the executed IR and can be based on one or more instructions
+from the input IR (ingredients). Note that a recipe might also model an instruction with no reference to any input
+IR (in our example, this would be the inversion of our vector mask). There are different types of 
 recipes. \texttt{VPReplicateRecipe} will either \texttt{CLONE} exactly one instruction from the input IR
 into exactly one instruction in the output IR, or \texttt{REPLICATE} an instruction a certain number
 of times into output IR (typically found in replicator \texttt{VPRegionBlocks}). Different 
 \texttt{VPWidenRecipes} exist to transform/\texttt{WIDEN} any input IR instruction into a vectorized 
-version of it. The last remaining recipe type in our example are \texttt{VPInstructions}. They
-\texttt{EMIT} new instructions into the output IR that have no representative in the input IR (no
+version of it. The last remaining recipe type in our example is \texttt{VPInstruction}. This recipe
+\texttt{EMIT}s new instructions into the output IR that have no representative in the input IR (no
 ingredients).
 
 Furthermore, VPlan recipes can also model definitions and usages of different values. In our example,
-the comparison mask \texttt{vp<\%6>} is a \texttt{VPValue} that is used by three different 
-\texttt{VPUsers}.
+the comparison mask \texttt{vp<\%6>} is a \texttt{VPValue} used by three \texttt{VPUsers}.
 
 \subsection{Future of VPlan}
-Many of the VPlan internals and systems surrounding it are still in active development. To stay
-up-to-date with the latest developments regarding auto-vectorization in LLVM one can follow the 
+Many of the VPlan internals and surrounding systems are still in active development. To stay up-to-date 
+with the latest developments regarding auto-vectorization in LLVM, one can follow the 
 Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop-optimizations/62}} or
 attend the monthly online 
 meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
 
 \subsubsection{VPlan and Integration with LV}
-The main effort of setting up the VPlan structure and integrating it first into LV has seen
-tremendous effort over the last years. Florian Hahn presented future directions for 
-VPlan~\cite{llvmvplanupdate}, which mostly evolve around transforming more LV-based decisions into
-explicit VPlan-to-VPlan transformations. Additionally, a lot of cost model related decisions 
-still end up being influenced by the old legacy LV cost model, however, transition to a VPlan-based 
-cost model has already started.
+Setting up and integrating the VPlan structure into LV has seen tremendous effort over the last 
+few years. Florian Hahn presented future directions for 
+VPlan~\cite{llvmvplanupdate}, which mostly revolve around transforming more LV-based decisions into
+explicit VPlan-to-VPlan transformations. Additionally, the old legacy LV cost model still influences 
+many cost model-related decisions. However, the transition to a VPlan-based cost model has already 
+started.
 
 \subsubsection{Outer Loop Vectorization}
-Development around outer loop vectorization has slowed down a bit as focus shifted more onto VPlan
-internals and integration into LV. The inner loop path and outer loop path are currently still
-seperated by the experimental \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} 
-flag. Further developing the 
-outer loop path and eventually merging it with the innermost loop path is planned.
+Development around outer loop vectorization has slowed as the focus shifted to VPlan internals 
+and integration into LV. The inner and outer loop paths are still separated, and the 
+experimental \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} flag must be 
+set to activate any outer 
+loop vectorization. Further development of the outer loop path and eventually merging it 
+with the innermost loop path is planned.
 
 \subsubsection{Merging with SLP Vectorize}
-Merging the existing SLP Vectorizer with the current VPlan infrastructure is in the early phase
-of planning.
+Merging the existing SLP Vectorizer with the current VPlan infrastructure is in the early planning phase.
 
 \subsubsection{Function Vectorization}
-As far as we now there is currently no active development for whole-function vectorization in the
-llvm-project's upstream yet.
+There is currently no active development for whole-function vectorization in the
+llvm-project's upstream.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -380,19 +378,19 @@ LLVM's toolchain.
 
 \section{Summary and Future Work}
 \label{sec:summary}
-In conclusion, VPlan has been in active development for several years now. When compiling with
-LLVM VPlan is used to model initial vectorization approaches, keep track of different
-optimization decisions and finally execute the best VPlan to transform IR. 
-However, there are still some VPlan-to-VPlan transformations and a VPlan-based cost model missing, 
-before the legacy LV code can be completely discarded.
+In conclusion, VPlan has been in active development for several years now. When compiling with LLVM, 
+VPlans model initial vectorization approaches, keep track of different optimization decisions, 
+and finally, the best VPlan executes to transform the underlying IR. 
+However, some VPlan-to-VPlan transformations and a VPlan-based cost model must be included before the 
+legacy LV code can be discarded entirely.
 
-Outer loop vectorization support via VPlan is still experimental, seperated from the inner loop
+Outer loop vectorization support via VPlan is still experimental, separated from the inner loop
 LV integration, and runs on a divergent experimental path (\texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path}).
-In the near future development on outer loop vectorization will continue and merging it with LV's
-VPlan path is planned.
+In the near future, development on outer loop vectorization will continue, and merging 
+it with LV's VPlan path is planned.
 
-Active development of other approaches such as SLP and whole-function vectorization based on the 
-VPlan architecture has not been started yet.
+Active development of other approaches, such as SLP and whole-function vectorization based on the VPlan 
+architecture, has yet to be started.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
