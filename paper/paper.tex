@@ -341,7 +341,7 @@ meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sy
 Setting up and integrating the VPlan structure into LV has seen tremendous effort over the last 
 few years. Florian Hahn presented future directions for 
 VPlan~\cite{llvmvplanupdate}, which mostly revolve around transforming more LV-based decisions into
-explicit VPlan-to-VPlan transformations. Additionally, the old legacy LV cost model still influences 
+explicit VPlan-to-VPlan transformations. Additionally, the legacy LV cost model still influences 
 many cost model-related decisions. However, the transition to a VPlan-based cost model has already 
 started.
 
@@ -368,8 +368,14 @@ llvm-project's upstream.
 
 \section{Related Work}
 \label{sec:relatedwork}
-Besides the main llvm-project's upstream there are many different projects making use of or extending
-LLVM's toolchain. 
+Next to the main llvm-projects upstream, many projects are using or extending the LLVM toolchain.
+
+One such project that also tries to enable auto-vectorization support for inner-, outer-loop, and 
+whole-function vectorization is the region vectorizer from the University Saarland~\cite{rv}.
+This region-vectorizer implements partial control-flow linearization~\cite{10.1145/3192366.3192413}
+and a divergence analysis that can handle unstructured CFGs. There has been an effort to partially
+implement this control-flow linearization and divergence analysis into LLVM's 
+upstream~\cite{rvproposal,rvproposaldep}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
