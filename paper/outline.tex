@@ -20,7 +20,7 @@
 \email{jonas.fritsch@tum.de}
 
 \begin{abstract}
-Lorem ipsum.
+abstract
 \end{abstract}
 
 \maketitle
@@ -40,7 +40,6 @@ Lorem ipsum.
   \item auto-vectorization complexity $\rightarrow$ wish for well designed, 
   interoperable system (VPlan) $\rightarrow$ transition from Loop Vectorizer + SLP Vectorizer to 
   Vectorization Plan $\rightarrow$ ongoing 8 year long effort started by Intel
-  \item rough paper outline
 \end{enumerate}
 
 
@@ -75,16 +74,20 @@ Lorem ipsum.
 \label{sec:vplan}
   Overview~\cite{llvmvec,llvmvplan,llvmextloopvec,llvmintrvplan,llvmvplanstate,llvmvplanrv,llvmouterloop,llvmvplanupdate}
 \begin{enumerate}
-  \item Phase 1: Legality
-  \item Phase 2: Planning (Vectorization Plans)
-  \begin{enumerate}
-    \item Building initial VPlan based on Phase 1 Constraints (Generate one or more up-to-date Code Examples for VPlan similar to~\cite{llvmintrvplan,llvmvplanstate,llvmouterloop})
-    $\rightarrow$ Explain different components (e.g.: \texttt{VPBasicBlock}, \texttt{VPRegionBlock}, etc.) and
-    correlation between generated VPlan structure, original scalar code. Show some general optimizations.
-    \item Modelling Cost. Not yet part of VPlan. (related work? already adopted?~\cite{POHL2020102106})
-    \item Optimizing/Transforming VPlans~\cite{llvmvplanupdate}
-  \end{enumerate}
-  \item Phase 3: Execution - Materialize best VPlan
+  \item History
+  \begin{itemize}
+    \item Short Summary how it was before (LoopVectorize)
+    \item Initial refactoring proposition by Intel
+    \item Describe rough final finished VPlan architecture.
+  \end{itemize}
+  \item State of VPlan
+  \begin{itemize}
+    \item Rough algorithm description (interplay of legacy LV, legacy cost model and new VPlan) (with light code references?)
+    \item VPlan structure (HCFG, \texttt{VPRegionBlock}, recipes, etc.) and modelling of IR explained via example similar to~\cite{llvmvplanstate} (What is good example? Too simple $\rightarrow$ doesn't cover enough; 
+    Too complex $\rightarrow$ doesn't fit into paper.)
+    \item (Outer Loop Vectorization?)
+  \end{itemize}
+  \item Future of VPlan (what is currently being worked on, what is planned next, what has not been planned)
 \end{enumerate}
 
 
@@ -94,10 +97,11 @@ Lorem ipsum.
 \section{Related Work}
 \label{sec:relatedwork}
 \begin{enumerate}
-  \item Other auto-vectorization algorithms / possible improvements~\cite{10.5555/3615924.3615932,4336219,llvmveccontrolflow,saarlandrv,10.1145/3303117.3306172}
-  \\Some of those should already be (partially) implemented in LLVM
-  \item Auto-Vectorization in GCC~\cite{autovecoptgcc, vecoptgcc}
-  \item Comparison with GCC~\cite{gccllvmveccomp,10.1155/2021/3264624}
+  \item Region Vectorizer (RV)~\cite{llvmvplanrv,10.1145/3192366.3192413}
+  \item (Other auto-vectorization algorithms / possible improvements~\cite{10.5555/3615924.3615932,4336219,llvmveccontrolflow,saarlandrv,10.1145/3303117.3306172})
+  \item (Auto-Vectorization in GCC~\cite{autovecoptgcc, vecoptgcc})
+  \item (Comparison with GCC~\cite{gccllvmveccomp,10.1155/2021/3264624})
+  \item (Comparison/Outlook auto-vectorization and explicit vectorization~\cite{10.1155/2021/3264624, 9802745, DBLP:conf/vldb/BensonER23})
   \item (Polyhedral compilation techniques~\cite{llvmpolyhedral})
   \item (LLM-based Vectorization~\cite{taneja2024llmvectorizerllmbasedverifiedloop})
 \end{enumerate}
@@ -108,12 +112,7 @@ Lorem ipsum.
 
 \section{Summary and Future Work}
 \label{sec:summary}
-\begin{enumerate}
-  \item VPlan Summary~\cite{llvmvplan,llvmvplanupdate}
-  \item VPlan Future Roadmap~\cite{llvmvplan,llvmvplanupdate} (e.g.: combining outer-/inner-loop paths, full function vectorization, etc.)
-  \item (Comparison/Outlook auto-vectorization and explicit vectorization~\cite{10.1155/2021/3264624, 9802745, DBLP:conf/vldb/BensonER23})
-\end{enumerate}
-
+VPlan Summary
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
