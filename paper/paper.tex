@@ -268,12 +268,37 @@ vectorization (VF $>1$), LV will also directly try to vectorize the epilogue loo
 To better understand the structure of a VPlan, we will use the
 simple conditional loop from Figure~\ref{fig:inner-loop-vec} as an example.
 
-Figure~\ref{fig:inner-loop-scalar-ir} shows the IR of the main loop basic blocks \texttt{for.body},
+Figure~\ref{fig:inner-loop-scalar-ir} shows the scalar IR of the main loop basic blocks \texttt{for.body},
 \texttt{if.then}, and \texttt{for.inc}. Figure~\ref{fig:inner-loop-vplan-hcfg-body} shows the equivalent
 hierarchical control-flow-graph (CFG) of a VPlan modelling a vectorization approach for this 
 scalar loop. Other basic blocks like the scalar epilogue loop and it's predication check (is the final
 vector trip count equal to the original trip count) are omitted. See Figure~\ref{fig:inner-loop-vplan-hcfg}
 in Appendix~\ref{appendix-figures} for the fully modeled HCFG.
+
+%TODO: Combine inner-loop-scalar-ir figure and inner-loop-vplan-hcfg into a single
+%       double column figure.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir-color.png}
+  \caption{The scalar IR for the main loop part of the conditional loop depicted in
+  Figure~\ref{fig:inner-loop-vec}. Note that \texttt{getelementptr inbounds}
+  was abbreviated to \texttt{getelmptr inbs}.}
+  \label{fig:inner-loop-scalar-ir}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-color.png}
+  \caption{The vectorized loop part of a hierarchical CFG of a VPlan modelling the conditional loop
+  depicted in Figure~\ref{fig:inner-loop-vec}. Some predefined values are
+  \texttt{vp<\%0>} = VF * UF; \texttt{vp<\%1>} = vector-trip-count; \texttt{vp<\%2>} = original trip-count.}
+  \label{fig:inner-loop-vplan-hcfg-body}
+\end{figure}
+
+The different colored parts in the scalar IR can be found with the same color in the modeled VPlan.
+The only completely new part that VPlan models in this example is the handling of the scalar epilogue
+loop (purple).
 
 The hierarchical CFG of a VPlan helps abstract it away from the underlying IR. The nodes of this CFG
 are either \texttt{VPBasicBlocks}, containing a sequence of one or more \texttt{VPRecipes}, or
@@ -299,26 +324,6 @@ ingredients).
 Furthermore, VPlan recipes can also model definitions and usages of different values. In our example,
 the comparison mask \texttt{vp<\%6>} is a \texttt{VPValue} that is used by three different 
 \texttt{VPUsers}.
-
-%TODO: Combine inner-loop-scalar-ir figure and inner-loop-vplan-hcfg into a single
-%       double column figure.
-\begin{figure}
-  \centering
-  \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir-color.png}
-  \caption{The scalar IR for the main loop part of the conditional loop depicted in
-  Figure~\ref{fig:inner-loop-vec}. Note that \texttt{getelementptr inbounds}
-  was abbreviated to \texttt{getelmptr inbs}.}
-  \label{fig:inner-loop-scalar-ir}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-color.png}
-  \caption{The vectorized loop part of a hierarchical CFG of a VPlan modelling the conditional loop
-  depicted in Figure~\ref{fig:inner-loop-vec}. Some predefined values are
-  \texttt{vp<\%0>} = VF * UF; \texttt{vp<\%1>} = vector-trip-count; \texttt{vp<\%2>} = original trip-count.}
-  \label{fig:inner-loop-vplan-hcfg-body}
-\end{figure}
 
 \subsection{Future of VPlan}
 Many of the VPlan internals and systems surrounding it are still in active development. To stay
