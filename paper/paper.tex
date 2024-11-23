@@ -65,7 +65,8 @@ might also not vectorize at all, is materialized into the LLVM IR.
 LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and is
 already modeling most inner loop vectorizations and transformations~\cite{llvmvplanupdate}. 
 Vectorization for outer loops is also in development and can be enabled by setting 
-the \texttt{-enable-vplan-native-path} feature flag~\cite{llvmouterloop,llvmouterloopstatus}. 
+the \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} feature 
+flag~\cite{llvmouterloop,llvmouterloopstatus}. 
 In the future, the plan will be to merge both of these loop vectorization paths into one. 
 Merging the existing SLP Vectorizer with VPlan is also planned.
 
@@ -221,7 +222,8 @@ vectorization approaches, abstracted away from the underlying IR. Each VPlan wou
 calculate its cost and transform itself to modify the final IR. At first the Legality 
 phase (yellow) would check if the scalar code would be legal to vectorize at all and if so initial 
 VPlans would be constructed. In the following Planning phase (magenta) these initial VPlans would 
-be optimized using various VPlan-to-VPlan transformations. Those transformations would be supervised 
+be optimized using various VPlan-to-VPlan transformations~\cite{llvmouterloopstatus}. 
+Those transformations would be supervised 
 by the VPlan's cost model. Finally, the best VPlan would be chosen and materialized/executed, 
 modifying the underlying IR. The best VPlan might also be to not vectorize at all (VF $=1$).
 
@@ -234,10 +236,11 @@ modifying the underlying IR. The best VPlan might also be to not vectorize at al
 \end{figure}
 
 \subsection{State of VPlan (LLVM 19.1.4)}
+\emergencystretch 6em
 
 In its current state VPlan is deeply integrated into LV.
 When auto-vectorizing, LV starts by checking all the different loops in the IR.
-If it finds one, it will try to vectorize it\\(\texttt{LoopVectorizePass::processLoop}).
+If it finds one, it will try to vectorize it (\texttt{LoopVectorizePass::\allowbreak processLoop}).
 Several factors might hinder vectorization for a given loop: 
 (1) If the loop was already vectorized before, it won't be vectorized again. 
 (2) The Legality phase checks if an how it is legal to vectorize the scalar
@@ -245,31 +248,63 @@ loop. (3) The loop's trip count might be too small to make vectorization profita
 of runtime checks for e.g. pointer aliasing can be too high.
 
 The initial VPlans are constructed based on the legality checks and the cost decisions the legacy
-LV cost model made referencing the scalar IR\\(\texttt{LoopVectorizationPlanner::plan}). Then the
-optimal Vectorization Factor (VF) and Interleave Count (IC) are picked. 
+LV cost model made referencing the scalar IR (\texttt{LoopVectorizationPlanner::\allowbreak plan}).
+After initial VPlan construction various VPlan-to-VPlan transformations are applied to optimize
+it (\texttt{LoopVectorizationPlanner::\allowbreak buildVPlansWithVPRecipes}).
+
+Then the optimal Vectorization Factor (VF) is calculated based on the set of VPlans and their
+representive cost (\texttt{LoopVectorizationPlanner::\allowbreak cost}), 
+which calculation still involves the legacy LV cost model. 
 The best VPlan is picked based on the optimal VF. A VF of 1 means it is not
 profitable to vectorize the loop, however, interleaving/unrolling can still end up modifying the
 underlying IR.
+Afterwards, the Interleave Count (IC) is determined 
+(\texttt{LoopVectorizationCostModel::\allowbreak selectInterleaveCount}).
 
-The best VPlan is then executed\\(\texttt{LoopVectorizationPlanner::executePlan}). In case of
+The best VPlan is then executed (\texttt{LoopVectorizationPlanner::\allowbreak executePlan}). In case of
 vectorization (VF $>1$), LV will also directly try to vectorize the epilogue loop.
 
 \subsubsection{VPlan Structure}
-To better understand the
-underlying structure of a VPlan, modelling a certain vectorization approach, we will use the
+To better understand the structure of a VPlan, we will use the
 simple conditional loop from Figure~\ref{fig:inner-loop-vec} as an example.
 
 Figure~\ref{fig:inner-loop-scalar-ir} shows the IR of the main loop basic blocks \texttt{for.body},
-\texttt{if.then}, and \texttt{for.inc}. Figure~\ref{fig:inner-loop-vplan-hcfg} shows the equivalent
+\texttt{if.then}, and \texttt{for.inc}. Figure~\ref{fig:inner-loop-vplan-hcfg-body} shows the equivalent
 hierarchical control-flow-graph (CFG) of a VPlan modelling a vectorization approach for this 
-scalar loop.
+scalar loop. Other basic blocks like the scalar epilogue loop and it's predication check (is the final
+vector trip count equal to the original trip count) are omitted. See Figure~\ref{fig:inner-loop-vplan-hcfg}
+in Appendix~\ref{appendix-figures} for the fully modeled HCFG.
 
+The hierarchical CFG of a VPlan helps abstract it away from the underlying IR. The nodes of this CFG
+are either \texttt{VPBasicBlocks}, containing a sequence of one or more \texttt{VPRecipes}, or
+\texttt{VPRegionBlocks}, modelling a single-entry-single-exit subgraph.
+In our example the \texttt{vector.body} is a basic block and \texttt{vector loop} is a region block.
+
+\texttt{VPRegionBlocks} can indicate that their contents are to be replicated a certain number of times,
+to model more complex control flow for different VF, UF combinations more efficiently in a single VPlan. 
+In our example \texttt{vector loop} is not to be replicated (\texttt{<x1>}).
+
+Inside our two \texttt{VPBasicBlocks} we have a list of recipes (lines of instructions). A recipe
+models one or more instructions in the executed IR and can be based on one or more instructions.
+from the input IR (ingredients). Note that a recipe might also model a instruction with no reference to any input
+IR (in our example this would be the inversion of our vector mask). There are different types of 
+recipes. \texttt{VPReplicateRecipe} will either \texttt{CLONE} exactly one instruction from the input IR
+into exactly one instruction in the output IR, or \texttt{REPLICATE} an instruction a certain number
+of times into output IR (typically found in replicator \texttt{VPRegionBlocks}). Different 
+\texttt{VPWidenRecipes} exist to transform/\texttt{WIDEN} any input IR instruction into a vectorized 
+version of it. The last remaining recipe type in our example are \texttt{VPInstructions}. They
+\texttt{EMIT} new instructions into the output IR that have no representative in the input IR (no
+ingredients).
+
+Furthermore, VPlan recipes can also model definitions and usages of different values. In our example,
+the comparison mask \texttt{vp<\%6>} is a \texttt{VPValue} that is used by three different 
+\texttt{VPUsers}.
 
 %TODO: Combine inner-loop-scalar-ir figure and inner-loop-vplan-hcfg into a single
 %       double column figure.
 \begin{figure}
   \centering
-  \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir.png}
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-scalar-loop-ir-color.png}
   \caption{The scalar IR for the main loop part of the conditional loop depicted in
   Figure~\ref{fig:inner-loop-vec}. Note that \texttt{getelementptr inbounds}
   was abbreviated to \texttt{getelmptr inbs}.}
@@ -278,12 +313,11 @@ scalar loop.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-2.png}
+  \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-color.png}
   \caption{The vectorized loop part of a hierarchical CFG of a VPlan modelling the conditional loop
-  depicted in Figure~\ref{fig:inner-loop-vec}. This VPlan has a VF of 4. Note that some keywords
-  are abbreviated: \texttt{arrayidx} $\equiv$ \texttt{arridx}; 
-  \texttt{getelementptr inbounds} $\equiv$ \texttt{getelmptr inbs}}
-  \label{fig:inner-loop-vplan-hcfg}
+  depicted in Figure~\ref{fig:inner-loop-vec}. Some predefined values are
+  \texttt{vp<\%0>} = VF * UF; \texttt{vp<\%1>} = vector-trip-count; \texttt{vp<\%2>} = original trip-count.}
+  \label{fig:inner-loop-vplan-hcfg-body}
 \end{figure}
 
 \subsection{Future of VPlan}
@@ -304,7 +338,8 @@ cost model has already started.
 \subsubsection{Outer Loop Vectorization}
 Development around outer loop vectorization has slowed down a bit as focus shifted more onto VPlan
 internals and integration into LV. The inner loop path and outer loop path are currently still
-seperated by the experimental \texttt{-enable-vplan-native-path} flag. Further developing the 
+seperated by the experimental \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} 
+flag. Further developing the 
 outer loop path and eventually merging it with the innermost loop path is planned.
 
 \subsubsection{Merging with SLP Vectorize}
@@ -340,7 +375,7 @@ However, there are still some VPlan-to-VPlan transformations and a VPlan-based c
 before the legacy LV code can be completely discarded.
 
 Outer loop vectorization support via VPlan is still experimental, seperated from the inner loop
-LV integration, and runs on a divergent experimental path (\texttt{-enable-vplan-native-path}).
+LV integration, and runs on a divergent experimental path (\texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path}).
 In the near future development on outer loop vectorization will continue and merging it with LV's
 VPlan path is planned.
 
@@ -354,7 +389,7 @@ VPlan architecture has not been started yet.
 
 \appendix
 
-\section{Appendix: Additional Figures}
+\section{Appendix: Additional Figures}\label{appendix-figures}
 
 \begin{figure*}
   \centering

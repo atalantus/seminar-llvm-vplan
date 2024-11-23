@@ -1,4 +1,10 @@
-define void @inner_loop_conditional(i32 %N, ptr %x, ptr %y, ptr %z) {
+; ModuleID = 'slm.ll'
+source_filename = "/mnt/c/Users/Jonas/Documents/TUM/NPIC/seminar-llvm-vplan/code/simple_loop.cpp"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind memory(argmem: readwrite)
+define dso_local void @inner_loop_conditional(i32 noundef %N, ptr nocapture noundef %x, ptr nocapture noundef readonly %y, ptr nocapture noundef readonly %z) local_unnamed_addr #0 {
 entry:
   %cmp9 = icmp sgt i32 %N, 0
   br i1 %cmp9, label %for.body.preheader, label %for.cond.cleanup
@@ -27,74 +33,27 @@ vector.ph:                                        ; preds = %vector.memcheck
   %n.vec = sub i64 %wide.trip.count, %n.mod.vf
   br label %vector.body
 
-vector.body:                                      ; preds = %pred.store.continue11, %vector.ph
-  %index = phi i64 [ 0, %vector.ph ], [ %index.next, %pred.store.continue11 ]
+vector.body:                                      ; preds = %vector.body, %vector.ph
+  %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
   %1 = add i64 %index, 0
   %2 = getelementptr inbounds i8, ptr %z, i64 %1
   %3 = getelementptr inbounds i8, ptr %2, i32 0
-  %wide.load = load <4 x i8>, ptr %3, align 1, !alias.scope !0
+  %wide.load = load <4 x i8>, ptr %3, align 1, !tbaa !2, !alias.scope !6
   %4 = icmp eq <4 x i8> %wide.load, zeroinitializer
   %5 = xor <4 x i1> %4, splat (i1 true)
-  %6 = extractelement <4 x i1> %5, i32 0
-  br i1 %6, label %pred.store.if, label %pred.store.continue
-
-pred.store.if:                                    ; preds = %vector.body
-  %7 = getelementptr inbounds float, ptr %y, i64 %1
-  %8 = load float, ptr %7, align 4, !alias.scope !3
-  %9 = getelementptr inbounds float, ptr %x, i64 %1
-  %10 = load float, ptr %9, align 4, !alias.scope !5, !noalias !7
-  %11 = fadd float %8, %10
-  store float %11, ptr %9, align 4, !alias.scope !5, !noalias !7
-  br label %pred.store.continue
-
-pred.store.continue:                              ; preds = %pred.store.if, %vector.body
-  %12 = extractelement <4 x i1> %5, i32 1
-  br i1 %12, label %pred.store.if6, label %pred.store.continue7
-
-pred.store.if6:                                   ; preds = %pred.store.continue
-  %13 = add i64 %index, 1
-  %14 = getelementptr inbounds float, ptr %y, i64 %13
-  %15 = load float, ptr %14, align 4, !alias.scope !3
-  %16 = getelementptr inbounds float, ptr %x, i64 %13
-  %17 = load float, ptr %16, align 4, !alias.scope !5, !noalias !7
-  %18 = fadd float %15, %17
-  store float %18, ptr %16, align 4, !alias.scope !5, !noalias !7
-  br label %pred.store.continue7
-
-pred.store.continue7:                             ; preds = %pred.store.if6, %pred.store.continue
-  %19 = extractelement <4 x i1> %5, i32 2
-  br i1 %19, label %pred.store.if8, label %pred.store.continue9
-
-pred.store.if8:                                   ; preds = %pred.store.continue7
-  %20 = add i64 %index, 2
-  %21 = getelementptr inbounds float, ptr %y, i64 %20
-  %22 = load float, ptr %21, align 4, !alias.scope !3
-  %23 = getelementptr inbounds float, ptr %x, i64 %20
-  %24 = load float, ptr %23, align 4, !alias.scope !5, !noalias !7
-  %25 = fadd float %22, %24
-  store float %25, ptr %23, align 4, !alias.scope !5, !noalias !7
-  br label %pred.store.continue9
-
-pred.store.continue9:                             ; preds = %pred.store.if8, %pred.store.continue7
-  %26 = extractelement <4 x i1> %5, i32 3
-  br i1 %26, label %pred.store.if10, label %pred.store.continue11
-
-pred.store.if10:                                  ; preds = %pred.store.continue9
-  %27 = add i64 %index, 3
-  %28 = getelementptr inbounds float, ptr %y, i64 %27
-  %29 = load float, ptr %28, align 4, !alias.scope !3
-  %30 = getelementptr inbounds float, ptr %x, i64 %27
-  %31 = load float, ptr %30, align 4, !alias.scope !5, !noalias !7
-  %32 = fadd float %29, %31
-  store float %32, ptr %30, align 4, !alias.scope !5, !noalias !7
-  br label %pred.store.continue11
-
-pred.store.continue11:                            ; preds = %pred.store.if10, %pred.store.continue9
+  %6 = getelementptr float, ptr %y, i64 %1
+  %7 = getelementptr float, ptr %6, i32 0
+  %wide.masked.load = call <4 x float> @llvm.masked.load.v4f32.p0(ptr %7, i32 4, <4 x i1> %5, <4 x float> poison), !tbaa !9, !alias.scope !11
+  %8 = getelementptr float, ptr %x, i64 %1
+  %9 = getelementptr float, ptr %8, i32 0
+  %wide.masked.load6 = call <4 x float> @llvm.masked.load.v4f32.p0(ptr %9, i32 4, <4 x i1> %5, <4 x float> poison), !tbaa !9, !alias.scope !13, !noalias !15
+  %10 = fadd <4 x float> %wide.masked.load, %wide.masked.load6
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %10, ptr %9, i32 4, <4 x i1> %5), !tbaa !9, !alias.scope !13, !noalias !15
   %index.next = add nuw i64 %index, 4
-  %33 = icmp eq i64 %index.next, %n.vec
-  br i1 %33, label %middle.block, label %vector.body, !llvm.loop !8
+  %11 = icmp eq i64 %index.next, %n.vec
+  br i1 %11, label %middle.block, label %vector.body, !llvm.loop !16
 
-middle.block:                                     ; preds = %pred.store.continue11
+middle.block:                                     ; preds = %vector.body
   %cmp.n = icmp eq i64 %wide.trip.count, %n.vec
   br i1 %cmp.n, label %for.cond.cleanup.loopexit, label %scalar.ph
 
@@ -111,34 +70,58 @@ for.cond.cleanup:                                 ; preds = %for.cond.cleanup.lo
 for.body:                                         ; preds = %scalar.ph, %for.inc
   %indvars.iv = phi i64 [ %bc.resume.val, %scalar.ph ], [ %indvars.iv.next, %for.inc ]
   %arrayidx = getelementptr inbounds i8, ptr %z, i64 %indvars.iv
-  %34 = load i8, ptr %arrayidx, align 1
-  %tobool.not = icmp eq i8 %34, 0
+  %12 = load i8, ptr %arrayidx, align 1, !tbaa !2, !range !20, !noundef !21
+  %tobool.not = icmp eq i8 %12, 0
   br i1 %tobool.not, label %for.inc, label %if.then
 
 if.then:                                          ; preds = %for.body
   %arrayidx2 = getelementptr inbounds float, ptr %y, i64 %indvars.iv
-  %35 = load float, ptr %arrayidx2, align 4
+  %13 = load float, ptr %arrayidx2, align 4, !tbaa !9
   %arrayidx4 = getelementptr inbounds float, ptr %x, i64 %indvars.iv
-  %36 = load float, ptr %arrayidx4, align 4
-  %add = fadd float %35, %36
-  store float %add, ptr %arrayidx4, align 4
+  %14 = load float, ptr %arrayidx4, align 4, !tbaa !9
+  %add = fadd float %13, %14
+  store float %add, ptr %arrayidx4, align 4, !tbaa !9
   br label %for.inc
 
 for.inc:                                          ; preds = %if.then, %for.body
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
-  br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body, !llvm.loop !11
+  br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body, !llvm.loop !22
 }
 
-!0 = !{!1}
-!1 = distinct !{!1, !2}
-!2 = distinct !{!2, !"LVerDomain"}
-!3 = !{!4}
-!4 = distinct !{!4, !2}
-!5 = !{!6}
-!6 = distinct !{!6, !2}
-!7 = !{!1, !4}
-!8 = distinct !{!8, !9, !10}
-!9 = !{!"llvm.loop.isvectorized", i32 1}
-!10 = !{!"llvm.loop.unroll.runtime.disable"}
-!11 = distinct !{!11, !9}
+; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: read)
+declare <4 x float> @llvm.masked.load.v4f32.p0(ptr nocapture, i32 immarg, <4 x i1>, <4 x float>) #1
+
+; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: write)
+declare void @llvm.masked.store.v4f32.p0(<4 x float>, ptr nocapture, i32 immarg, <4 x i1>) #2
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind memory(argmem: readwrite) "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="znver4" "target-features"="+adx,+aes,+avx,+avx2,+avx512bf16,+avx512bitalg,+avx512bw,+avx512cd,+avx512dq,+avx512f,+avx512ifma,+avx512vbmi,+avx512vbmi2,+avx512vl,+avx512vnni,+avx512vpopcntdq,+bmi,+bmi2,+clflushopt,+clwb,+clzero,+crc32,+cx16,+cx8,+evex512,+f16c,+fma,+fsgsbase,+fxsr,+gfni,+invpcid,+lzcnt,+mmx,+movbe,+mwaitx,+pclmul,+pku,+popcnt,+prfchw,+rdpid,+rdpru,+rdrnd,+rdseed,+sahf,+sha,+shstk,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+sse4a,+ssse3,+vaes,+vpclmulqdq,+wbnoinvd,+x87,+xsave,+xsavec,+xsaveopt,+xsaves" }
+attributes #1 = { nocallback nofree nosync nounwind willreturn memory(argmem: read) }
+attributes #2 = { nocallback nofree nosync nounwind willreturn memory(argmem: write) }
+
+!llvm.module.flags = !{!0}
+!llvm.ident = !{!1}
+
+!0 = !{i32 1, !"wchar_size", i32 4}
+!1 = !{!"Ubuntu clang version 18.1.8 (++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92)"}
+!2 = !{!3, !3, i64 0}
+!3 = !{!"bool", !4, i64 0}
+!4 = !{!"omnipotent char", !5, i64 0}
+!5 = !{!"Simple C++ TBAA"}
+!6 = !{!7}
+!7 = distinct !{!7, !8}
+!8 = distinct !{!8, !"LVerDomain"}
+!9 = !{!10, !10, i64 0}
+!10 = !{!"float", !4, i64 0}
+!11 = !{!12}
+!12 = distinct !{!12, !8}
+!13 = !{!14}
+!14 = distinct !{!14, !8}
+!15 = !{!7, !12}
+!16 = distinct !{!16, !17, !18, !19}
+!17 = !{!"llvm.loop.mustprogress"}
+!18 = !{!"llvm.loop.isvectorized", i32 1}
+!19 = !{!"llvm.loop.unroll.runtime.disable"}
+!20 = !{i8 0, i8 2}
+!21 = !{}
+!22 = distinct !{!22, !17, !18}
