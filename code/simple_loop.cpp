@@ -1,8 +1,8 @@
-#define ENABLE_VECTORIZATION 0
+#define ENABLE_VECTORIZATION 1
 
 #if ENABLE_VECTORIZATION
 #define VECTORIZABLE_LOOP \
-    _Pragma("clang loop vectorize(enable) interleave(enable) vectorize_predicate(disable)")
+    _Pragma("clang loop vectorize_width(4) interleave_count(1)")
 #else
 #define VECTORIZABLE_LOOP \
     _Pragma("clang loop vectorize(disable) interleave(disable)")
@@ -14,11 +14,19 @@
 //         x[i] = y[i] + z[i];
 //     }
 // }
+//
+// void inner_loop_conditional(const int N, float* x, const float* y, const bool* z) {
+//     for (int i = 0; i < N; i++) {
+//         if (z[i]) {
+//             x[i] += y[i];
+//         }
+//     }
+// }
 
-void inner_loop_conditional(const int N, float* x, const float* y, const bool* z) {
+void inner_loop_conditional_intdiv(const int N, int *a, int b, int *c) {
     for (int i = 0; i < N; i++) {
-        if (z[i]) {
-            x[i] += y[i];
+        if (a[i] > 1337) {
+            a[i] = c[i] / b;
         }
     }
 }
