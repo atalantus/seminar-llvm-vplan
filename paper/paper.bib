@@ -216,6 +216,14 @@ archivePrefix = {arXiv},
   note = {Accessed: 2024-11-18}
 }
 
+@online{datadepvec,
+  author = {Cornell University},
+  title = {Vector-Aware Coding - Data Dependencies},
+  year = {2023},
+  url = {https://cvw.cac.cornell.edu/vector/coding/data-dependencies},
+  note = {Accessed: 2024-12-04}
+}
+
 @online{llvmintrvplan,
   author = {Rapaport, Gil and Zaks, Ayal},
   title = {Introducing VPlan to the Loop Vectorizer},
@@ -325,7 +333,6 @@ number = {3},
 issn = {0163-5964},
 url = {https://doi.org/10.1145/2366231.2337210},
 doi = {10.1145/2366231.2337210},
-abstract = {Current processor trends of integrating more cores with wider SIMD units, along with a deeper and complex memory hierarchy, have made it increasingly more challenging to extract performance from applications. It is believed by some that traditional approaches to programming do not apply to these modern processors and hence radical new languages must be discovered. In this paper, we question this thinking and offer evidence in support of traditional programming methods and the performance-vs-programming effort effectiveness of common multi-core processors and upcoming many-core architectures in delivering significant speedup, and close-to-optimal performance for commonly used parallel computing workloads.We first quantify the extent of the "Ninja gap", which is the performance gap between naively written C/C++ code that is parallelism unaware (often serial) and best-optimized code on modern multi-/many-core processors. Using a set of representative throughput computing benchmarks, we show that there is an average Ninja gap of 24X (up to 53X) for a recent 6-core Intel® Core™ i7 X980 Westmere CPU, and that this gap if left unaddressed will inevitably increase. We show how a set of well-known algorithmic changes coupled with advancements in modern compiler technology can bring down the Ninja gap to an average of just 1.3X. These changes typically require low programming effort, as compared to the very high effort in producing Ninja code. We also discuss hardware support for programmability that can reduce the impact of these changes and even further increase programmer productivity. We show equally encouraging results for the upcoming Intel® Many Integrated Core architecture (Intel® MIC) which has more cores and wider SIMD. We thus demonstrate that we can contain the otherwise uncontrolled growth of the Ninja gap and offer a more stable and predictable performance growth over future architectures, offering strong evidence that radical language changes are not required.},
 journal = {SIGARCH Comput. Archit. News},
 month = jun,
 pages = {440–451},
@@ -339,7 +346,6 @@ year = {2012},
 isbn = {9781450316422},
 publisher = {IEEE Computer Society},
 address = {USA},
-abstract = {Current processor trends of integrating more cores with wider SIMD units, along with a deeper and complex memory hierarchy, have made it increasingly more challenging to extract performance from applications. It is believed by some that traditional approaches to programming do not apply to these modern processors and hence radical new languages must be discovered. In this paper, we question this thinking and offer evidence in support of traditional programming methods and the performance-vs-programming effort effectiveness of common multi-core processors and upcoming many-core architectures in delivering significant speedup, and close-to-optimal performance for commonly used parallel computing workloads.We first quantify the extent of the "Ninja gap", which is the performance gap between naively written C/C++ code that is parallelism unaware (often serial) and best-optimized code on modern multi-/many-core processors. Using a set of representative throughput computing benchmarks, we show that there is an average Ninja gap of 24X (up to 53X) for a recent 6-core Intel® Core™ i7 X980 Westmere CPU, and that this gap if left unaddressed will inevitably increase. We show how a set of well-known algorithmic changes coupled with advancements in modern compiler technology can bring down the Ninja gap to an average of just 1.3X. These changes typically require low programming effort, as compared to the very high effort in producing Ninja code. We also discuss hardware support for programmability that can reduce the impact of these changes and even further increase programmer productivity. We show equally encouraging results for the upcoming Intel® Many Integrated Core architecture (Intel® MIC) which has more cores and wider SIMD. We thus demonstrate that we can contain the otherwise uncontrolled growth of the Ninja gap and offer a more stable and predictable performance growth over future architectures, offering strong evidence that radical language changes are not required.},
 booktitle = {Proceedings of the 39th Annual International Symposium on Computer Architecture},
 pages = {440–451},
 numpages = {12},
@@ -393,7 +399,13 @@ location = {Philadelphia, PA, USA},
 series = {PLDI 2018}
 }
 
-
+@online{llvmhistorystate,
+  author = {Golin, Renato},
+  title = {Auto-Vectorization in LLVM},
+  year = {2014},
+  url = {https://llvm.org/devmtg/2014-02/#talk2},
+  note = {Accessed: 2024-12-04}
+}
 
 @online{rv,
   author = {Compiler Design Lab - Saarland University},
@@ -409,6 +421,14 @@ series = {PLDI 2018}
   year = {2018},
   url = {https://llvm.org/devmtg/2018-04/slides/Caballero-Extending%20LoopVectorize%20to%20Support%20Outer%20Loop%20Vectorization%20Using%20VPlan.pdf},
   note = {Accessed: 2024-11-18}
+}
+
+@online{rvintro,
+  author = {Moll, Simon},
+  title = {Extending LoopVectorize to Support Outer Loop Vectorization Using VPlan},
+  year = {2016},
+  url = {https://www.youtube.com/watch?v=cyldhrzqxPA},
+  note = {Accessed: 2024-12-03}
 }
 
 @online{rvproposal,
