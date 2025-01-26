@@ -170,9 +170,18 @@ Not all data dependencies directly hinder any vectorization~\cite{datadepvec}. A
 sometimes be made for reduction idioms, as seen in the inner loop in 
 Figure~\ref{fig:outer-loop-vec}, where \texttt{sum} would be a reduction variable.
 
-Uncountable loops can typically also not be vectorized due to their unknown number of iterations.
+Uncountable loops, meaning loops where the total iteration count cannot be determined before the 
+loop is executed, can often not be vectorized. This is because their exit condition usually depends on 
+the loop's body itself, making it impossible to predetermine how many vector lanes are needed for the next 
+loop iteration when executing.
 
-Finally, some instructions, such as integer division, do inherently not have a vectorized instruction equivalent.
+Finally, some instructions do generally not have a direct vectorized 
+instruction equivalent. For example Integer division, commonly implemented using the 
+\textit{Newton-Raphson method}, is already a complex and iterative operation 
+on modern CPUs. Applying this algorithm 
+to multiple data elements in a single vector register would result in even more implementation complexity 
+and is thus considered not worthwhile in most cases.
+Workarounds for some specialized cases do exist~\cite{vecintdiv}.
 
 \subsection{Vectorization Costs}
 While vectorizing a given control flow may not be legal, the vectorized code sometimes performs 
@@ -187,17 +196,21 @@ approaches to avoid such runtime penalties are branch-on-superword-condition cod
 (BOSCC)~\cite{10.5555/1299042.1299055,llvmboscc} or active-lane 
 consolidation (ALC)~\cite{10.1007/s11227-022-04359-w,10.5555/3615924.3615932}.
 
-Some vector instructions can be costly on most CPUs. Examples are gather, scatter, shuffle,
-and permutation instructions. control flow with many non-adjacent memory loads/stores or 
-operations that combine different vector elements, such as reductions, can decrease vectorization 
-performance.
+The actual performance of a vector instruction also heavily depends on the ISA and its 
+hardware implementation. 
+For example, gather, scatter, 
+shuffle, and permutation instructions are typically slow. Control flow with many 
+non-adjacent memory accesses or 
+operations that combine different vector elements from the same register (horizontal reductions) can thus 
+decrease vectorization performance.
 
 Additionally, the vectorized code size will always be larger than the scalar equivalent. This is
 due to many factors: (1) The transformed control flow often includes more instructions.
 (2) As the loop trip count might not be a perfect multiple of the Vectorization Factor, a scalar
 epilogue/remainder of the loop might be used to handle the tail iterations. (3) Various runtime
 checks might be inserted throughout the vectorized control flow to handle, for example, pointers 
-to overlapping memory regions, in which case the scalar version of the loop is executed.
+to overlapping memory regions, in which case the scalar version of the loop must be executed due to 
+unclear data dependencies.
 
 \subsection{Auto-Vectorization in LLVM}
 LLVM implements two different vectorizers for auto-vectorization, LoopVectorize (LV)
@@ -274,8 +287,10 @@ Vectorization Factors (VFs) and Unroll Factors (UFs).
 \paragraph{H-CFG}
 This is achieved by introducing a new layer of abstraction from the underlying loop's scalar IR.
 Each VPlan stores its own Hierarchical-CFG (H-CFG) modeling the vectorization candidate. This 
-control-flow graph and its components are the main elements of a single VPlan.
-The nodes of this H-CFG are one of three types:
+control-flow graph and its components are the main elements of a single VPlan. It is hierarchical
+in that a single node of this graph can be a complete subgraph, representing more complex nested
+behavior.
+Specifically, any node of this H-CFG is one of three types:
 
 \begin{itemize}
   \item \texttt{VPBasicBlock} stores a list of \texttt{VPRecipes} similar to 
@@ -293,6 +308,7 @@ Figure~\ref{fig:inner-loop-scalar-ir} shows the loop part of the scalar IR for t
 of Figure~\ref{fig:inner-loop-vec}. Comparatively, Figure~\ref{fig:inner-loop-vplan-hcfg-body}
 shows the loop part of the H-CFG of a VPlan that models the vectorization approach described
 in Figure~\ref{fig:inner-loop-vec}.
+% TODO: Explain contents of both figures better
 
 \begin{figure}
   \centering
@@ -323,12 +339,13 @@ underlying scalar IR and will materialize into one or more LLVM IR instructions 
 There are many different types of \texttt{VPRecipes}, most notably:
 \begin{itemize}
   \item \texttt{VPReplicateRecipe} will replicate one IR instruction either once (\texttt{CLONE})
-  or multiple times (\texttt{REPLICATE}) into the vectorized IR when executed.
+  or VF * UF times (\texttt{REPLICATE}) into the vectorized IR when executed.
   \item \texttt{VPWidenRecipe} will \texttt{WIDEN} one IR instruction into a
   vector-equivalent when executed.
   \item \texttt{VPInstruction} has no underlying IR instruction it is based on and is used 
   to model newly needed instructions for the vectorized IR. When executed it will 
   \texttt{EMIT} one or more new IR instructions.
+  % TODO: Explain some instructions more in detail (e.g. CANONICAL-INDUCTION, SCALAR-STEPS)
 \end{itemize}
 
 The \texttt{VPRecipes} in Figure~\ref{fig:inner-loop-vplan-hcfg-body} have a \texttt{PREFIX}
@@ -345,7 +362,9 @@ transformation is a static method that either transforms a given VPlan or create
 VPlan based on a given VPlan. The analysis for these transformations can also be done 
 directly on the VPlan via its \texttt{VPRecipes}.
 
-\subsection{State of VPlan (LLVM 19.1.4)}
+% TODO: VPlan Transformations example
+
+\section{State of VPlan (LLVM 19.1.4)}
 \emergencystretch 6em
 In its current state, VPlan is already deeply integrated into LoopVectorize (LV) and is
 used to model, optimize, and execute vectorization of innermost loops~\cite{llvmvplan,llvmintrvplan,llvmvplanupdate}. 
@@ -357,7 +376,7 @@ feature flag~\cite{llvmouterloop,llvmouterloopstatus}.
 To better understand how VPlan is already being used in LLVM, we will now follow along the 
 LoopVectorize pass and summarize its key components.
 
-\subsubsection{Phase 1: Legality}
+\subsection{Phase 1: Legality}
 The main part of this phase is checking whether it is even legal to optimize a given loop. 
 In addition to the general vectorization legality concepts mentioned in 
 Section~\ref{sec:vec-legal}, LV has a several extra conditions to check.
@@ -380,7 +399,8 @@ Some of the most important legality checks done are:
 One can find more details about these legality checks and their implementations by looking 
 at the LLVM codebase under \texttt{LoopVectorizationLegality::\allowbreak canVectorize}.
 
-\subsubsection{Phase 2: Planning}
+\subsection{Phase 2: Planning}
+% TODO: Connect better to previous phase (expand a bit on how the legality artifacts are used when planning)
 After the Legality Phase has analyzed the scalar loop, initial VPlans are constructed.
 A VPlan is initialized by creating the H-CFG skeleton building blocks like preheaders, a 
 region block for the vector loop, a middle block with the potential runtime check for the scalar 
@@ -399,14 +419,18 @@ Currently, LV and VPlan still mostly rely on the old cost model. This legacy cos
 based on the scalar LLVM IR instructions or, if applicable, their vectorized equivalent.
 This is suboptimal for VPlan as VPlans work on \texttt{VPRecipes} abstracted away from the underlying 
 IR. These costs per instruction are then generally just lookup tables influenced by the underlying 
-compile target. 
+compile target.
+% TODO: Expand on this and explain a bit more
 
-\subsubsection{Phase 3: Execution}
+\subsection{Phase 3: Execution}
 After the best VPlan has been chosen, it is executed (\texttt{LoopVectorizationPlanner::executePlan}).
 For this VPlan, some final transformations are run depending on a specifically chosen VF and UF.
 First, a vectorized code skeleton is created in the IR, and then the VPlan is executed. 
-Upon execution, the H-CFG of the VPlan is walked, and each node is executed, which executes all 
-of its \texttt{VPRecipes} in order. 
+Upon execution, the H-CFG of the VPlan is walked, and each node is executed, which in turn executes all 
+of its \texttt{VPRecipes} in order.
+
+% TODO: How exactly is the translation from VP recipe back to LLVM IR working? Where does the target
+%       backend come in to decide what actual instruction?
 
 Figure~\ref{fig:inner-loop-vec-cfg} shows the general CFG of a vectorized loop in LLVM and, for branches, 
 the general branch condition per block.
@@ -416,22 +440,23 @@ the general branch condition per block.
   \includegraphics[width=0.35\textwidth]{images/inner-loop-vec-loop-cfg-color.png}
   \caption{The generalized CFG for a vectorized loop with trip count \texttt{N}, 
   iteration variable \texttt{i}, vectorization factor \texttt{VF}, 
-  and unroll factor \texttt{UF} in LLVM. A VPlan would explicitly model the red-highlighted 
-  region in its H-CFG.}
+  and unroll factor \texttt{UF} in LLVM. A VPlan would so far explicitly model the red-highlighted 
+  region in its H-CFG. If a node branches, the condition is stated in the body, and the two possible 
+  path edges are marked with T (True) and F (False).}
   \label{fig:inner-loop-vec-cfg}
 \end{figure}
 
 If the epilogue loop could be further vectorized, it would be in a second pass by creating VPlans, 
 finding the best one, and executing it.
 
-\subsection{Future of VPlan}
+\section{Future of VPlan}
 Many of the VPlan internals and surrounding systems are still in active development. To stay up-to-date 
 with the latest developments regarding auto-vectorization in LLVM, one can follow the 
 Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop-optimizations/62}} or
 attend the monthly online 
 meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
 
-\subsubsection{VPlan and Integration with LV}
+\subsection{VPlan and Integration with LV}
 Setting up and integrating the VPlan structure into LV has seen tremendous effort over the last 
 few years. Florian Hahn presented future directions for 
 VPlan~\cite{llvmvplanupdate}, which mostly revolve around transforming more LV-based decisions into
@@ -440,7 +465,7 @@ many cost model-related decisions. However, the transition to a VPlan-based cost
 started. This new model would derive costs based on \texttt{VPRecipes} directly instead of the 
 abstracted scalar IR instructions.
 
-\subsubsection{Outer Loop Vectorization}
+\subsection{Outer Loop Vectorization}
 Development around outer loop vectorization has slowed as the focus shifted to VPlan internals 
 and integration into LV. The inner and outer loop paths are still separated, and the 
 experimental \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} flag must be 
@@ -448,10 +473,10 @@ set to activate any outer
 loop vectorization. Further development of the outer loop path and eventually merging it 
 with the innermost loop path is planned.
 
-\subsubsection{Merging with SLP Vectorize}
+\subsection{Merging with SLP Vectorize}
 Merging the existing SLP Vectorizer with the current VPlan infrastructure is in the early planning phase.
 
-\subsubsection{Function Vectorization}
+\subsection{Function Vectorization}
 There is currently no active development for whole-function vectorization in the
 llvm-project's upstream.
 
@@ -485,6 +510,14 @@ and a divergence analysis that can handle unstructured CFGs. There has been an e
 implement this control flow linearization and divergence analysis into LLVM's 
 upstream~\cite{rvproposal,rvproposaldep}.
 
+% TODO: Dependency Analysis (SCEV Expressions)
+%         - https://www.npopov.com/2023/10/03/LLVM-Scalar-evolution.html
+%         - https://www.youtube.com/watch?v=AmjliNp0_00
+% TODO: Polly and its use for loop transformations affecting data dependencies
+% TODO: Comparisons LLVM with GCC
+%         - Tail loop folding (https://github.com/llvm/llvm-project/issues/123069)
+%         - Another benchmark: https://www.spec.org/cpu2017/Docs/benchmarks/525.x264_r.html
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -508,6 +541,11 @@ it with LV's VPlan path is planned.
 
 Active development of other approaches, such as SLP and whole-function vectorization based on the VPlan 
 architecture, has yet to be started.
+
+% TODO: Write about potential future work benchmarking
+%       Loop Code Benchmark collection
+%       Quick note about collaborative development (example stability & miscompile policy)
+%       LLVM Loop Optimization as one of the most active subareas of LLVM development
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
