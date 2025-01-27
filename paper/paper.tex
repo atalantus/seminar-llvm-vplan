@@ -608,12 +608,19 @@ upstream~\cite{rvproposal,rvproposaldep}.
 
 \section{Summary and Future Work}
 \label{sec:summary}
-In conclusion, VPlan has been in active development for several years now. When compiling with LLVM, 
-VPlans are used to model different vectorization approaches. They do so by adding a new layer of 
-abstraction over the underlying LLVM IR. This VPlan layer uses \texttt{VPRecipes} to model 
-vectorization-specific instructions. 
-This abstraction allows for efficiently exploring many optimization decisions simultaneously, 
-keeping the underlying implementation flexible and modular. In the end, a cost model currently 
+Compilers have been using auto-vectorization to help developers optimize their code 
+across platforms by making the best possible use of a target's SIMD capabilities. Over the years, 
+LLVM's original auto-vectorization system evolved into an inflexible pipeline, making it hard 
+to adapt to new features like outer-loop vectorization.
+
+As a solution, Intel proposed a new modular system called VPlan.
+By now, VPlan has been in active development for several years. 
+This system would use different VPlan objects to efficiently 
+model and explore different vectorization approaches simultaneously.
+It adds a new layer using \texttt{VPRecipes} to model 
+vectorization-specific instructions over the underlying LLVM IR. 
+This abstraction allows for efficiently exploring different optimization decisions simultaneously, 
+keeping the underlying implementation flexible and modular. In the end, a cost model currently still 
 working based on LLVM IR instead of \texttt{VPRecipes} is used to compare different VPlans 
 and choose the most optimal one. Finally, this chosen VPlan is executed, materializing its \texttt{VPRecipes} 
 back into LLVM IR.
@@ -629,8 +636,6 @@ architecture, has yet to be started.
 %       Loop Code Benchmark collection
 %       Quick note about collaborative development (example stability & miscompile policy)
 %       LLVM Loop Optimization as one of the most active subareas of LLVM development
-% TODO: "Also, it would be great to have the main problem and paper’s aim to be re-stated in the summary section for the first reading pass."
-%       "summary lacks the problem statement and the big picture"
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
