@@ -43,6 +43,15 @@ series = {PLDI 2022}
   note = {Accessed: 2024-11-04}
 }
 
+@online{gccvecsum,
+  author = {Jelínek, Jakub},
+  title = {Vectorization optimization in GCC},
+  year = {2023},
+  month = {12},
+  url = {https://developers.redhat.com/articles/2023/12/08/vectorization-optimization-gcc#auto_vectorization},
+  note = {Accessed: 2025-01-22}
+}
+
 @online{autovecoptgcc,
   author = {GCC Team},
   title = {Auto-vectorization in GCC},
@@ -53,6 +62,14 @@ series = {PLDI 2022}
 }
 
 @online{llvmvplanrv,
+  author = {Simon Moll, Sebastian Hack},
+  title = {VPlan + Rv: A Proposal},
+  year = {2017},
+  url = {https://www.youtube.com/watch?v=svMEphbFukw},
+  note = {Accessed: 2024-11-11}
+}
+
+@online{TSVC_2,
   author = {Simon Moll, Sebastian Hack},
   title = {VPlan + Rv: A Proposal},
   year = {2017},
@@ -278,20 +295,6 @@ numpages = {12},
 series = {PACT '07}
 }
 
-@inproceedings{10.5555/3615924.3615932,
-author = {Paktinatkeleshteri, Rouzbeh and de Carvalho, Jo\~{a}o P. L and Amiri, Ehsan and Amaral, J. Nelson},
-title = {Efficient Auto-Vectorization for Control-flow Dependent Loops through Data Permutation},
-year = {2023},
-publisher = {IBM Corp.},
-address = {USA},
-booktitle = {Proceedings of the 33rd Annual International Conference on Computer Science and Software Engineering},
-pages = {74–83},
-numpages = {10},
-keywords = {SIMD, Scalable-Vector Extensions, Compilers},
-location = {Las Vegas, NV, USA},
-series = {CASCON '23}
-}
-
 @article{10.1007/s11227-022-04359-w,
 author = {Praharenka, Wyatt and Pankratz, David and De Carvalho, Jo\~{a}o P. L. and Amiri, Ehsan and Amaral, Jos\'{e} Nelson},
 title = {Vectorizing divergent control flow with active-lane consolidation on long-vector architectures},
@@ -455,8 +458,16 @@ series = {PLDI 2018}
   note = {Accessed: 2024-11-19}
 }
 
+@online{riscvtailfolding,
+  author = {Lau, Luke},
+  title = {RISC-V EVL tail folding},
+  year = {2025},
+  url = {https://github.com/llvm/llvm-project/issues/123069},
+  note = {Accessed: 2025-01-21}
+}
+
 @inproceedings{10.1145/3303117.3306172,
-author = {Simon Moll and Shrey Sharma and Matthias Kurtenacker and Sebastian Hack },
+author = {Moll, Simon and Sharma, Shrey and Kurtenacker, Matthias and Hack, Sebastian},
 title = {Multi-dimensional Vectorization in LLVM},
 year = {2019},
 isbn = {9781450362917},
@@ -470,6 +481,38 @@ numpages = {8},
 keywords = {Compiler, Optimization, SIMD, Tensor, Vectorization},
 location = {Washington, DC, USA},
 series = {WPMVP'19}
+}
+
+@article{feng2021evaluation,
+  title={Evaluation of compilers’ capability of automatic vectorization based on source code analysis},
+  author={Feng, Jing Ge and He, Ye Ping and Tao, Qiu Ming},
+  journal={Scientific Programming},
+  volume={2021},
+  number={1},
+  pages={3264624},
+  year={2021},
+  publisher={Wiley Online Library}
+}
+
+@doctoralThesis{Moll_2021, 
+title={Vectorization system for unstructured codes with a Data-parallel Compiler IR}, 
+author={Moll, Simon},
+doi={http://dx.doi.org/10.22028/D291-35500}, 
+year={2021} 
+}
+
+@inproceedings{10.5555/3615924.3615932,
+author = {Paktinatkeleshteri, Rouzbeh and de Carvalho, Jo\~{a}o P. L and Amiri, Ehsan and Amaral, J. Nelson},
+title = {Efficient Auto-Vectorization for Control-flow Dependent Loops through Data Permutation},
+year = {2023},
+publisher = {IBM Corp.},
+address = {USA},
+booktitle = {Proceedings of the 33rd Annual International Conference on Computer Science and Software Engineering},
+pages = {74–83},
+numpages = {10},
+keywords = {SIMD, Scalable-Vector Extensions, Compilers},
+location = {Las Vegas, NV, USA},
+series = {CASCON '23}
 }
 
 @inproceedings{10.1145/1454115.1454119,
