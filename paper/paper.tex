@@ -42,7 +42,7 @@
 \section{Introduction}
 \label{sec:introduction}
 Modern CPUs are often equipped with multiple different vector registers. These registers are nowadays 
-as wide as 512 bits, allowing for the processing of multiple data streams at once (SIMD). By 
+as wide as 512 bits or more, allowing for the processing of multiple data streams at once (SIMD). By 
 batching multiple values together in one register, different ISAs like Intel AVX or ARM SVE allow 
 the execution of the same instruction for all values in a vector register simultaneously. 
 Utilizing this leads to significant performance improvements over the scalar equivalent most of 
@@ -66,7 +66,7 @@ and compare the costs of such different vectorization approaches.
 With these limitations in mind, Intel started an ongoing refactorization effort to migrate LLVM's
 auto-vectorization pipeline to utilize a more abstract Vectorization Plan 
 (VPlan)~\cite{llvmextloopvec,llvmvplan}. The final goal would be to unite LLVM's auto-vectorization
-in a single flexible system capable of optimizing SLPs, inner, and nested loops with complex 
+in a single flexible system capable of optimizing SLPs, and inner and nested loops with complex 
 control-flow.
 
 The auto-vectorization pass would create multiple different VPlans based on initial legality 
@@ -74,10 +74,10 @@ checks. Each VPlan represents a different vectorization approach, by modeling th
 underlying scalar control flow with its own abstracted vectorized version. Different VPlan-to-VPlan
 transformations can then optimize these abstracted control-flows based on a cost model.
 After that, the best VPlan, and with it, the best vectorization approach is chosen by the cost model.
-This VPlan is then executed by going over its own vectorized control flow representation and
+This VPlan is then executed by going over its own vectorized intermediate representation and
 materializing it back into the underlying LLVM IR.
 
-LLVM's VPlan is currently being integrated into the existing Loop Vectorizer and is
+LLVM's VPlan system is currently being integrated into the existing Loop Vectorizer and is
 already modeling most inner loop vectorizations and transformations~\cite{llvmvplanupdate}. 
 Vectorization for outer loops is also in development and can be enabled by setting 
 the \texttt{-enable-\allowbreak vplan-\allowbreak native-\allowbreak path} feature 
@@ -87,10 +87,12 @@ Merging the existing SLP Vectorizer with VPlan is also planned.
 
 The rest of this paper is organized as follows. First, we explain different vectorization
 strategies and constraints in general and describe the original auto-vectorization
-approach in LLVM. Section~\ref{sec:vplan} then introduces the new VPlan approach, focusing on
-its most important individual components, and gives an outlook on future developments. In 
-Section~\ref{sec:relatedwork}, we highlight work related to LLVM's auto-vectorization. Concluding,
-we summarize VPlan, its current state, and its potential future.
+approach in LLVM. Section~\ref{sec:vplan} then introduces the new VPlan system, focusing on
+its core VPlan component. Next, we summarize the current state of VPlan as of LLVM version 19.1.4.
+Section~\ref{sec:vplanfuture} gives an outlook on future developments regarding VPlan. In 
+Section~\ref{sec:relatedwork}, we highlight other approaches to auto-vectorization and 
+comparisons of LLVM's auto-vectorization to other compilers such as GCC. 
+Concluding, we summarize the intentions of VPlan, its current state, and its potential future.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -107,7 +109,7 @@ In general, vectorization strategies can be separated into different categories:
 \paragraph{Inner Loop Vectorization}
 Innermost loops are loops whose body's control flow does not contain any more loops.
 Vectorization of these loops is more straightforward as the only option to vectorize is over 
-the loop's induction variable.
+the one loop's induction variables.
 
 There are various ways to transform the control flow of a loop to accommodate operating on widened
 vector registers. Figure~\ref{fig:inner-loop-vec} shows an example of an if-conversion. Some more
@@ -131,7 +133,7 @@ instructions might then be vectorized later by an SLP vectorizer.
 Outer loop vectorization focuses on control flow with nested loops. Such control flow often presents
 more challenges for auto-vectorization, as one could vectorize over the outer loop,
 inner loop, or a mix of both, representing a hybrid/multi-dimensional vectorization approach.
-Finding the best legal vectorization can therefor be more difficult.
+Finding the best legal vectorization can, therefore, be more difficult.
 
 Figure~\ref{fig:outer-loop-vec} shows a nested loop code snippet where vectorization over the
 outer loop would be beneficial.
@@ -140,7 +142,7 @@ outer loop would be beneficial.
   \centering
   \includegraphics[width=0.39\textwidth]{images/outer-loop-vec.png}
   \caption{A code snippet of a nested loop where it would be beneficial to vectorize over the 
-  outer loop. The inner loop has a trip count (6) that is too low to vectorize. Additionally,
+  outer loop. The inner loop has a trip count that is too low to vectorize (6). Additionally,
   the memory access pattern of \texttt{y} would be consecutive compared to scattered when
   vectorizing over \texttt{i} instead of \texttt{j}.}
   \label{fig:outer-loop-vec}
@@ -150,7 +152,7 @@ outer loop would be beneficial.
 Function vectorization refers to the vectorization of entire functions. A loop might contain a
 non-inlined function call, passing data related to the iteration variable. During auto-vectorization, 
 this call could be replaced with a call to a newly constructed function with the same semantic 
-control-flow but operating on multiple values at once through vector registers.
+control-flow but operating on multiple values at once by utilizing vector registers.
  
 \subsection{Vectorization Legality}
 \label{sec:vec-legal}
@@ -158,11 +160,11 @@ Not all loops can be vectorized. There are various factors that can ultimately h
 vectorization attempts.
 
 Some of the most common vectorization barriers are data dependencies. As the vectorized version
-of a code executes for Vectorization Factor (VF) $N$ data streams simultaneously, it inherently changes
+of a code executes for Vectorization Factor (VF) data streams simultaneously, it inherently changes
 the order of operations. To guarantee that the semantics of the code do not change, all
-operations on these $N$ data streams must, generally, be independent. The simplest case
-where this is not provided is when the $i$-th loop iteration depends on any of the $(i-N)$-th 
-previous iterations.
+operations on these VF data streams must, generally, be independent. The simplest case
+where this is not provided is when the $i$-th loop iteration depends on any of the 
+previous iterations up to the $(i-\text{VF})$-th.
 
 While explicit data dependencies are easier to see, a simple loop, as in 
 Figure~\ref{fig:inner-loop-vec}, could carry an implicit dependency in line 3 if
@@ -174,26 +176,26 @@ Figure~\ref{fig:outer-loop-vec}, where \texttt{sum} would be a reduction variabl
 
 Uncountable loops, meaning loops where the total iteration count cannot be determined before the 
 loop is executed, can often not be vectorized. This is because their exit condition usually depends on 
-the loop's body itself, making it impossible to predetermine how many vector lanes are needed for the next 
-loop iteration when executing.
+the loop's body itself, making it impossible to predetermine how many iterations could be processed together 
+before having to check the exit condition again.
 
 Finally, some instructions do generally not have a direct vectorized 
 instruction equivalent. For example Integer division, commonly implemented using the 
-\textit{Newton-Raphson method}, is already a complex and iterative operation 
+Newton-Raphson method, is already a complex and iterative operation 
 on modern CPUs. Applying this algorithm 
 to multiple data elements in a single vector register would result in even more implementation complexity 
 and is thus considered not worthwhile in most cases.
 Workarounds for some specialized cases do exist~\cite{vecintdiv}.
 
 \subsection{Vectorization Costs}
-While vectorizing a given control flow may not be legal, the vectorized code sometimes performs 
+While vectorizing a given control flow may not be legal, the vectorized code can sometimes also perform 
 worse than its scalar equivalent.
 
 Some control flow transformations that seem beneficial at compile time might reveal a performance
 bottleneck at runtime. Considering the code snippet from Figure~\ref{fig:inner-loop-vec}, it might
 be that almost all \texttt{z[i]} evaluate to false at runtime. The branch predictor of a CPU
 would then be able to guess the correct branch in the scalar code. The vectorized version would
-always load the \texttt{y[i]} into memory only for the addition to be masked away. Different 
+always access the memory at \texttt{y[i]} only for the addition to be masked away. Different 
 approaches to avoid such runtime penalties are branch-on-superword-condition code 
 (BOSCC)~\cite{10.5555/1299042.1299055,llvmboscc} or active-lane 
 consolidation (ALC)~\cite{10.1007/s11227-022-04359-w,10.5555/3615924.3615932}.
@@ -201,18 +203,17 @@ consolidation (ALC)~\cite{10.1007/s11227-022-04359-w,10.5555/3615924.3615932}.
 The actual performance of a vector instruction also heavily depends on the ISA and its 
 hardware implementation. 
 For example, gather, scatter, 
-shuffle, and permutation instructions are typically slow. Control flow with many 
+shuffle, and permutation instructions are typically considered slow. Control flow with many 
 non-adjacent memory accesses or 
 operations that combine different vector elements from the same register (horizontal reductions) can thus 
-decrease vectorization performance.
+decrease overall performance.
 
 Additionally, the vectorized code size will always be larger than the scalar equivalent. This is
 due to many factors: (1) The transformed control flow often includes more instructions.
-(2) As the loop trip count might not be a perfect multiple of the Vectorization Factor, a scalar
+(2) As the loop trip count might not be a perfect multiple of the vectorization factor, a scalar
 epilogue/tail of the loop might be used to handle the remaining loop iterations. (3) Various runtime
 checks might be inserted throughout the vectorized control flow to handle, for example, pointers 
-to overlapping memory regions, in which case the scalar version of the loop must be executed due to 
-unclear data dependencies.
+to overlapping memory regions, in which case the scalar version of the loop must be executed.
 
 \subsection{Auto-Vectorization in LLVM}
 LLVM implements two different vectorizers for auto-vectorization, LoopVectorize (LV)
@@ -236,12 +237,11 @@ the IR in one go based on all the previously produced artifacts.
 
 However, this rigid flow of LoopVectorize presented a challenge. Extending LV to include outer loop 
 and nested loop vectorizations would have been difficult, as LV was designed to flatten a
-loop's control flow into a single basic block. Producing and considering more and 
-more artifacts when trying to transform the scalar loop into a vectorized one all at once also did 
-not scale well.
+loop's control flow into a single basic block. Producing and considering more artifacts when trying to 
+transform the scalar loop into a vectorized all at once also did not scale well.
 
 As a potential solution, Intel proposed a long-term effort to refactor LLVM's whole auto-vectorization
-using a more modular and flexible system called Vectorization Plan (VPlan)~\cite{llvmextloopvec}.
+pipeline to use a more modular and scalable system called Vectorization Plan (VPlan)~\cite{llvmextloopvec}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -253,14 +253,15 @@ using a more modular and flexible system called Vectorization Plan (VPlan)~\cite
 \label{sec:vplan}
 
 Intel's initial VPlan proposal aimed to unite any 
-auto-vectorization systems (SLP, Inner/Outer-Loop, Whole-Function) into a 
+auto-vectorization strategy (SLP, Inner/Outer-Loop, Whole-Function) into a 
 single flexible system~\cite{llvmextloopvec,llvmintrvplan,llvmvplanstate}. 
-This system would use VPlans to represent different 
+This system would use VPlan objects to represent different 
 vectorization approaches, abstracting away from the underlying scalar loop IR using its own 
 hierarchical control flow graph (H-CFG). This allows iteratively exploring different 
-optimization decisions by performing transformations on this CFG without modifying any LLVM IR.
-Each VPlan could to calculate its cost and execute itself, materializing the vectorization 
-approach back into LLVM IR.
+optimization decisions by performing transformations on this graph without modifying the 
+underlying LLVM IR.
+Each VPlan could calculate its cost and execute itself, materializing its vectorization 
+approach back into the LLVM IR.
 
 This planned system is shown in Figure~\ref{fig:vplan-future}. At first, the Legality 
 Phase would check if the scalar code would be legal to vectorize at all, and if so, 
@@ -279,7 +280,7 @@ would be chosen and executed, modifying the underlying IR.
 
 \subsection{VPlan Structure}
 Before explaining how far this system has been implemented in LLVM, we will review
-the different elements of a \texttt{VPlan} in more detail.
+the different elements of a \textit{VPlan} in more detail.
 
 The purpose of a single VPlan object is to model a candidate for vectorization. 
 Such a single candidate can potentially represent multiple different vectorized loops. 
@@ -287,10 +288,10 @@ For example, one VPlan might model a general vectorization approach for various
 Vectorization Factors (VFs) and Unroll Factors (UFs).
 
 \paragraph{H-CFG}
-\emergencystretch 1em
+\emergencystretch 2em
 
 This is achieved by introducing a new layer of abstraction from the underlying loop's scalar IR.
-Each VPlan stores its own Hierarchical-CFG (H-CFG) modeling the vectorization candidate. This 
+Each VPlan stores its own Hierarchical-CFG (H-CFG) modeling its vectorization candidate. This 
 control-flow graph and its components are the main elements of a single VPlan. It is hierarchical
 in that a single node of this graph can be a complete subgraph, representing more complex nested
 behavior.
@@ -299,9 +300,9 @@ Specifically, any node of this H-CFG is one of three types:
 \begin{itemize}
   \item \texttt{VPBasicBlock} stores a list of \texttt{VPRecipes} similar to 
   the LLVM IR's \texttt{BasicBlock} holding a list of IR Instructions.
-  \item \texttt{VPRegionBlock} represents a subgraph with a single VP entry node and a 
-  single VP exit node. A \texttt{VPRegionBlock} can be marked to replicate its subgraph
-  \texttt{VF * UF} times when executing. This is useful for modeling scalarized or predicated
+  \item \texttt{VPRegionBlock} represents a subgraph with a single entry and exit node. 
+  A \texttt{VPRegionBlock} can be marked to replicate its subgraph
+  \texttt{VF~*~UF} times when executing. This is useful for modeling scalarized or predicated
   instructions within the final vectorized loop body.
   \item \texttt{VPIRBasicBlock} is a special \texttt{VPBasicBlock} that wraps an underlying
   IR \texttt{BasicBlock}. These nodes help model the scalar parts around the 
@@ -320,24 +321,24 @@ Specifically, any node of this H-CFG is one of three types:
 \begin{figure}
   \centering
   \includegraphics[width=0.475\textwidth]{images/inner-loop-vplan-hcfg-loop-body-color.png}
-  \caption{The vectorized loop part of the hierarchical CFG of a VPlan modeling the 
+  \caption{The vectorized loop part of a VPlan's hierarchical CFG modeling the 
   conditional loop depicted in Figure~\ref{fig:inner-loop-vec}. 
-  Surrounding \texttt{VPIRBasicBlock}-nodes are omitted.
+  Surrounding nodes were omitted for clarity.
   Some predefined values are
-  \texttt{vp<\%0>} = VF * UF; \texttt{vp<\%1>} = vector trip count; \texttt{vp<\%2>} = original trip count.}
+  \texttt{vp<\%0>} = \texttt{VF * UF}; \texttt{vp<\%1>} = vector trip count; \texttt{vp<\%2>} = original trip count.}
   \label{fig:inner-loop-vplan-hcfg-body}
 \end{figure}
 
 Figure~\ref{fig:inner-loop-scalar-ir} shows the loop part of the scalar IR for the code example
 of Figure~\ref{fig:inner-loop-vec}. Comparatively, Figure~\ref{fig:inner-loop-vplan-hcfg-body}
-shows the vectorized loop part of the H-CFG of a VPlan that models the vectorization approach described
-in Figure~\ref{fig:inner-loop-vec}. Note that the full H-CFG of this VPlan consists of many more nodes 
+shows the equivalent vector loop part of a VPlan's H-CFG that models the vectorization approach described
+in Figure~\ref{fig:inner-loop-vec}. Note that the complete H-CFG of this VPlan consists of many more nodes 
 to handle legality checks (coming before the vectorized loop) or the entire scalar epilogue loop 
 (coming after the vectorized loop).
 
 The H-CFG in Figure~\ref{fig:inner-loop-vplan-hcfg-body} consists of 3 nodes on the highest layer. 
 \texttt{vector.preheader} and \texttt{middle.block} 
-are simple \texttt{VPBasicBlocks} surrounding the main vector loop node. This \texttt{vector loop} node 
+are simple \texttt{VPBasicBlocks} surrounding the main \texttt{vector loop} node. The \texttt{vector loop} node 
 is a \texttt{VPRegionBlock} that does 
 not replicate its contents (indicated by \texttt{<x1>}; otherwise, it would be \texttt{<xVFxUF>}).
 
@@ -347,16 +348,16 @@ models the entire vectorized loop via \texttt{VPRecipes}.
 \paragraph{Recipes}
 \emergencystretch 2em
 
-\texttt{VPRecipes} can be seen as instructions of an IR specialized for auto-vectorization. 
+\texttt{VPRecipes} can be seen as instructions of an intermediate representation specialized for auto-vectorization. 
 A single \texttt{VPRecipe} inside a VPlan is based on zero or more LLVM IR instructions 
-of the underlying scalar IR, called ingredients, and will materialize into one or more LLVM IR 
-instructions when executed.
+of the underlying scalar IR. These underlying IR instructions are called \textit{ingredients}. 
+Each \texttt{VPRecipe} will materialize back into one or more LLVM IR instructions when it is executed.
 
 There are currently 40 different final types of \texttt{VPRecipes}. The types used 
 within Figure~\ref{fig:inner-loop-vplan-hcfg-body} and the most important ones are:
 \begin{itemize}
   \item \texttt{VPReplicateRecipe} will replicate one IR instruction either once (\texttt{CLONE})
-  or VF * UF times (\texttt{REPLICATE}) into the vectorized IR when executed.
+  or \texttt{VF * UF} times (\texttt{REPLICATE}) into the vectorized IR when executed.
   \item \texttt{VPWidenRecipe} will \texttt{WIDEN} one IR instruction into a
   vector-equivalent when executed.
   \item \texttt{VPInstruction} has no underlying IR instruction it is based on and is used 
@@ -371,30 +372,29 @@ within Figure~\ref{fig:inner-loop-vplan-hcfg-body} and the most important ones a
 \end{itemize}
 
 Most of the \texttt{VPRecipes} in Figure~\ref{fig:inner-loop-vplan-hcfg-body} have capitalized 
-\texttt{HINTS} indicating their type. Additionally instructions/recipes of the same color 
-between Figure~\ref{fig:inner-loop-scalar-ir} and Figure~\ref{fig:inner-loop-vplan-hcfg-body}
+\texttt{HINTS} indicating their type. Additionally IR instructions/\texttt{VPRecipes} of the same color 
+in Figure~\ref{fig:inner-loop-scalar-ir} and Figure~\ref{fig:inner-loop-vplan-hcfg-body}
 are related in their semantical effect. 
 
-The only recipes in our example VPlan CFG that do not semantically model any 
+The only \texttt{VPRecipes} in our example VPlan H-CFG that do not semantically model any 
 instructions found in the scalar IR are from the \texttt{middle.block} (purple). 
-This block decides if the scalar epilogue loop is executed after the vectorized loop by 
+This block decides if the scalar epilogue loop is still executed after the vectorized loop by 
 comparing the vector trip count to the original loop trip count. This additional vector trip count is 
-needed as the original loop trip count might not be a perfect multiple of VF * UF, the number of elements 
-processed in a single iteration.
+needed as the original loop trip count might not be a perfect multiple of \texttt{VF * UF}, the number of elements 
+processed in a single vector loop iteration.
 
 The red recipes generally handle the induction variable \texttt{i} and the termination of the 
-vectorized loop. \texttt{vp<\%3>} is this loop's scalar induction variable, which goes from 0 to 
+vector loop. \texttt{vp<\%3>} is this loop's scalar induction variable, which goes from 0 to 
 \texttt{vp<\%1>}, the vector trip count. The per vector-lane offset's step size is 1 (\texttt{ir<1>}), 
 meaning that each 
-vector-lane offset from the base induction variable is one greater than the previous lane (we access the 
-memory consecutively).
+vector-lane offset from the base induction variable (\texttt{vp<\%3>}) is one greater than the previous lane. 
+Thus the memory is accessed consecutively.
 
-The blue recipes model the condition guarding the addition. \texttt{vp<\%6>} holds the mask, which 
-results from this condition and is used for the guarded memory operations.
+The blue recipes model the condition guarding the addition. \texttt{vp<\%6>} holds the conditional mask 
+and is used for the guarded memory operations.
 
 Finally, the green recipes represent the addition. First, the data from both \texttt{y} and \texttt{x} 
-gets loaded (guarded by the compare mask), then added together, and then stored back into 
-\texttt{x} (again, guarded by the compare mask).
+gets loaded, then added together, and then stored back into \texttt{x}.
 
 \paragraph{Transformations}
 Another main benefit of the modular VPlan system is that most vector-optimization cases can 
@@ -407,7 +407,7 @@ Such transformations include for example:
 \begin{itemize}
   \item Simplifying \texttt{VPRecipes} by removing blend operations with only one unique input, removing 
   redundant type casts, and simplifying logical patterns.
-  \item Removing dead \texttt{VPRecipes} whose values have no users.
+  \item Removing dead \texttt{VPRecipes} whose produced values have no users consuming them.
   \item Moving loop-invariant \texttt{VPRecipes} out of the vector loop region. A \texttt{VPRecipe} is 
   considered loop-invariant if it does not have any side effects, does not read from memory, is not a 
   phi node, and all its operands are defined outside of the vector loop region.
@@ -427,15 +427,15 @@ To better understand how VPlan is already being used in LLVM, we will now follow
 \subsection{Phase 1: Legality}
 The main part of this first phase is checking whether it is even legal to vectorize a given loop. 
 In addition to the general vectorization legality concepts mentioned in 
-Section~\ref{sec:vec-legal}, LV has a several extra conditions to check.
+Section~\ref{sec:vec-legal}, LoopVectorize has a several extra conditions to check.
 
 Some of the most important legality checks done are:
 \begin{itemize}
   \item The scalar loop's control flow must not contain indirect branches or multiple back-edges.
   An indirect branch is a branch that jumps to a value evaluated at runtime. A back-edge in a loop 
-  is an edge from the loop back to it. 
+  is an edge from the loop's body back to its start. 
   \item Loops with non-linear control flow must be if-convertible. This means any branch or switch 
-  statement must not exit the loop. All instructions of such a block can be executed speculatively 
+  statement must not exit the loop. All instructions of such a predicated block can be executed speculatively 
   (e.g. via masking)
   \item Loop-carried dependencies must be vectorizable (see Section~\ref{sec:vec-legal}). In LV 
   this means explicitly that such a value must \textit{at least} either be an induction variable, a reduction 
@@ -445,36 +445,37 @@ Some of the most important legality checks done are:
 \end{itemize}
 
 Additionally, during this phase, all recurrences of the loop, such as reductions or inductions, are analyzed,
-and their phi nodes are stored in a set.
+and their phi nodes are stored for the later initialization of VPlans.
 
 \subsection{Phase 2: Planning}
-After the Legality Phase has analyzed the scalar loop and it is deemed legal to vectorize the 
-\texttt{LoopVectorizationCostModel} and the \texttt{LoopVectorizationPlanner} are initialized.
-The latter one then constructs the initial VPlans based on the properties gathered during the legal phase
-and the cost model initialization, such as the recurrence variables or the maximum viable vectorization 
-factor.
+After the Legality Phase has analyzed the scalar loop and it was deemed legal to vectorize, the 
+\texttt{LoopVectorizationCostModel} and \texttt{LoopVectorizationPlanner} are initialized.
+The latter one then constructs the initial VPlans for different vectorization factors based on the properties 
+gathered during the legal phase
+and the cost model initialization. These properties are, for example, recurrence variables or the maximum viable 
+vectorization factor.
 
 A VPlan is initialized by creating the H-CFG skeleton building blocks like preheaders, a 
 region block for the vector loop, a middle block with the potential runtime check for the scalar 
-epilogue loop, and a block for the scalar loop. After the H-CFG has been created, the scalar LLVM IR 
+epilogue loop, and a block for the scalar epilogue loop itself. Then the scalar LLVM IR 
 is iterated in topological order, and each scalar IR instruction is transformed into a \texttt{VPRecipe}.
-After modeling each scalar IR instruction with a \texttt{VPRecipe}, several VPlan transformations 
-are executed, optimizing the initialized VPlan.
+After that the original scalar loop is represented by a general vectorization approach. Lastly, several VPlan 
+transformations are executed, transforming and optimizing the VPlan's H-CFG and its \texttt{VPRecipes}.
 
-After the initial VPlans have been optimized, the best Vectorization Factor is computed. This is done 
+After all the initial VPlans have been optimized, the best vectorization factor is computed. This is done 
 by comparing all generated VPlans for all their possible VFs and choosing the most profitable one. If 
 this step computes an optimal VF of $1$, any vectorization is not profitable compared to the 
 scalar version.
 
 \paragraph{Cost Model}
 Currently, LV and VPlan still mostly rely on the old cost model. This legacy cost model derives costs 
-based on the scalar LLVM IR instructions or, if applicable, their vectorized equivalent.
+based on the scalar LLVM IR instructions or, if applicable, their direct vectorized equivalent.
 This is suboptimal for VPlan as VPlans work on \texttt{VPRecipes} abstracted away from the underlying 
 IR. These costs per instruction are then generally lookup tables influenced by the chosen target 
 architecture.
 
 A remainder of the old \texttt{LoopVectorize} implementation before VPlan is the 
-before-mentioned \texttt{LoopVectorizationCostModel}. It is a single object that computes different costs based on the scalar loop 
+before-mentioned \texttt{LoopVectorizationCostModel}. It is a single object that computes costs based on the scalar loop 
 IR without any relation to different VPlans. For example, it stores the instructions that will remain scalar 
 after vectorization or the LLVM values for which the cost can 
 be ignored. The latter includes, for instance, loop invariant operations that would be hoisted out of the loop 
@@ -483,24 +484,24 @@ or trivially dead instructions.
 Additionally, each \texttt{VPRecipe} has a function to calculate its own cost. For most \texttt{VPRecipes} 
 that reference one or more LLVM IR ingredients, these are then used to calculate the cost of the recipe.
 On the other hand, \texttt{VPRecipes} that do not directly model an underlying LLVM scalar IR instruction, 
-such as \texttt{VPInstruction}, can generally not compute their own cost and thus return a cost of zero 
+such as \texttt{VPInstruction}, can generally not compute their own cost yet, thus returning a cost of zero 
 for now.
 
 For simple innermost loops with few vectorization approaches,
 relying on the old cost model might not have too much of a performance impact. 
 However, once more VPlan transformations and complex
 outer/hybrid loop vectorization are implemented, this new cost model would be an important
-detail of the VPlan system to reliably choose the most optimal vectorization approach.
+detail of the VPlan system to reliably choose the most optimal vectorization candidate.
 
 \subsection{Phase 3: Execution}
-After the best VPlan has been chosen, it is executed (\texttt{LoopVectorizationPlanner::executePlan}).
+After the best VPlan has been chosen, it is executed.
 For this VPlan, some final transformations are run depending on a specifically chosen VF and UF.
 Then a vectorized code skeleton is created in the IR, and the VPlan executed. 
-Upon execution, the H-CFG of the VPlan is walked, and each node is executed, which in turn executes all 
+The H-CFG of the VPlan is walked, and each node executed, which in turn executes all 
 of its \texttt{VPRecipes} in order. Each \texttt{VPRecipe} produces its respective output IR.
 
 A \texttt{VPTransformState} object is passed along to store information 
-needed for generating the output IR, such as the chosen Vectorization Factor or generated values that were 
+needed for generating the output IR, such as the chosen vectorization factor or generated values that were 
 used by later \texttt{VPRecipes}.
 
 \begin{figure}
@@ -515,25 +516,27 @@ used by later \texttt{VPRecipes}.
 \end{figure}
 
 While Figure~\ref{fig:inner-loop-vec-cfg} shows the general CFG of a vectorized loop in LLVM, some 
-nodes can also be omitted in special cases.
+of its nodes can also be omitted in special cases.
 
 For example, if all the pointers used inside the function are marked as \texttt{noalias}, the compiler 
 is guaranteed that they will not overlap and the \texttt{vector.memcheck} block will be omitted.
-While the C language and most modern C++ compilers have an explicit \texttt{restrict} keyword for this,
+While the C language and most modern C\texttt{++} compilers have an explicit \texttt{restrict} keyword for this,
 Rust automatically applies the \texttt{noalias} attribute to safe references when compiling via LLVM.
 
 Additionally, before the initial VPlans are constructed at the beginning of Phase 2, it is also checked if 
-the scalar epilogue loop could be folded into the vectorized loop version itself by increasing the vector 
+the scalar epilogue loop could be folded into the vector loop itself by increasing the vector 
 trip count over the actual loop trip count and masking all operations. This tail-loop folding approach in LLVM 
 has not yet been enabled by default.
 
-Otherwise, if the scalar epilogue loop could be vectorized, it would be in a second loop-vectorize 
+Otherwise, if the newly created scalar epilogue loop could be vectorized, it would be in a second loop-vectorize 
 pass by, again, creating VPlans, finding the best one, and executing it.
 
 \section{Future of VPlan}
+\label{sec:vplanfuture}
+
 Many of the VPlan internals and surrounding systems are still in active development. To stay up-to-date 
 with the latest developments regarding auto-vectorization in LLVM, one can follow the 
-Community Forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop-optimizations/62}} or
+community forum\footnote{\url{https://discourse.llvm.org/c/ir-optimizations/loop-optimizations/62}} or
 attend the monthly online 
 meetings\footnote{\url{https://discourse.llvm.org/t/monthly-vectorizer-online-sync-up/78978/3}}.
 
@@ -542,7 +545,7 @@ Setting up and integrating the VPlan structure into LV has seen tremendous effor
 few years. Florian Hahn presented future directions for 
 VPlan~\cite{llvmvplanupdate}, which mostly revolve around transforming more LV-based decisions into
 explicit VPlan-to-VPlan transformations. Additionally, the legacy LV cost model still influences 
-many cost model-related decisions. However, the transition to a VPlan-based cost model has already 
+many cost-related decisions. However, the transition to a VPlan-based cost model has been 
 started. This new model would derive costs based on \texttt{VPRecipes} directly instead of the 
 abstracted scalar IR instructions. Besides that, the community also focuses on enabling tail-loop folding by
 default, which would lead to a significant performance increase in some instances.
@@ -620,7 +623,7 @@ The authors also investigated the number of successfully auto-vectorized code ro
 benchmark divided into different vectorization categories. Out of a total of 151 different routines, GCC 9 
 vectorized 68, LLVM 9 vectorized 49, and ICC 19 did 98.
 
-Feng et al. concluded that auto-vectorizers were mostly limited by analysis capabilities 
+Feng et al. concluded that auto-vectorizers were mostly limited by analyzing capabilities 
 needed to reason about specific optimization approaches and inaccurate cost models.
 
 While LLVM 9 performs poorly in this paper, it is important to notice that at the time of LLVM 9, VPlan was relatively 
@@ -637,7 +640,7 @@ This makes the code more compatible and scalable across different underlying har
 
 In the paper, the author concludes that the achieved performance uplifts by auto-vectorization are very 
 similar between GCC 14 and LLVM 17, with GCC only being marginally better. LLVM 17 tends to favor 
-generating vector code targeting specific vector sizes. However, it is unclear whether this is an 
+generating vector code targeting specific vector sizes. However, it is unclear whether this has an 
 actual drawback.
 
 Finally, as mentioned before, the LLVM auto-vectorization community is currently working on 
@@ -659,19 +662,19 @@ to adapt to new features like outer loop vectorization.
 
 As a solution, Intel proposed a new modular system called VPlan.
 By now, VPlan has been in active development for several years. 
-This system would use different VPlan objects to efficiently 
+This system would use multiple VPlan objects to efficiently 
 model and explore different vectorization approaches simultaneously.
-It adds a new layer using \texttt{VPRecipes} to model 
+It adds another layer of abstraction by using \texttt{VPRecipes} to model 
 vectorization-specific instructions over the underlying LLVM IR. 
-This abstraction allows for efficiently exploring different optimization decisions simultaneously, 
-keeping the underlying implementation flexible and modular. In the end, a cost model currently still 
+This allows for efficiently exploring multiple optimization decisions simultaneously, 
+keeping the underlying implementation flexible and modular. In the end, a cost model currently 
 working based on LLVM IR instead of \texttt{VPRecipes} is used to compare different VPlans 
 and choose the most optimal one. Finally, this chosen VPlan is executed, materializing its \texttt{VPRecipes} 
 back into LLVM IR.
 
-Outer loop vectorization support via VPlan is still experimental and separated from the inner loop
-LV integration. In the near future, development on outer loop vectorization will continue, and merging 
-it with LV's VPlan path is planned. Otherwise, development is currently underway to enable 
+While inner loop vectorization is already implemented, support for outer loops is still experimental. 
+In the near future, development on outer loop vectorization will continue, and merging 
+it with the LoopVectorize VPlan path is planned. Besides that, development is currently focusing on enabling 
 tail-loop folding by default.
 
 Active development of other approaches, such as SLP and whole-function vectorization based on the VPlan 
@@ -679,15 +682,21 @@ architecture, has yet to be started. Lastly, the initially planned cost model wh
 VPlan to calculate its own cost has not been implemented yet but could become a vital system in the future 
 of VPlan.
 
-In the future, it might be interesting to benchmark and compare different auto-vectorization systems, 
-such as the old LLVM LoopVectorize pass, the current state of LLVM with its new VPlan system, 
-GCC~\cite{autovecoptgcc}, ICC, and region vectorizers~\cite{Moll_2021,10.1145/3303117.3306172,rv}. Interesting metrics to 
+To help evaluate the idea and current state of VPlan, it might be interesting to benchmark and 
+compare it against different auto-vectorization systems, 
+such as LLVM before VPlan, 
+GCC, ICC, and region vectorizers~\cite{Moll_2021,10.1145/3303117.3306172,rv}. Interesting 
+metrics to 
 compare would be compile time, performance and size of the produced code, differences in the chosen 
 vectorization approaches, differences in legality checks that lead to loops not being vectorized, 
 correctness, and stability. These metrics can then differ based on the target architecture.
 
 Various suitable benchmark sets exist that have also been used for similar 
 comparisons, such as TSVC 2 or SPEC CPU 2017.
+
+In conclusion, the new VPlan architecture has already transformed LLVM's previously rigid auto-vectorization 
+pipeline into a much more modular and flexible system. While some important features are still missing, the 
+LLVM community has continuously improved VPlan over the last few years and will continue to do so.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
